@@ -186,7 +186,7 @@ def exchange_multiple(
             LendingBasePoolMetaZap(swap).exchange_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, 0)
         elif params[2] == 6:
             use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
-            CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth)
+            CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth, value=eth_amount)
         elif params[2] == 7:
             _amounts: uint256[2] = [0, 0]
             _amounts[params[0]] = amount
