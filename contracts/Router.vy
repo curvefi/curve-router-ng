@@ -1,4 +1,4 @@
-# @version 0.3.3
+# @version 0.3.7
 """
 @title Curve Registry Exchange Contract
 @license MIT
@@ -71,6 +71,17 @@ interface WETH:
     def deposit(): payable
     def withdraw(_amount: uint256): nonpayable
 
+# SNX
+interface Synthetix:
+    def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
+
+interface SynthetixExchangeRates:
+    def effectiveValue(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32) -> uint256: view
+
+interface SynthetixAddressResolver:
+    def getAddress(name: bytes32) -> address: view
+
+
 event ExchangeMultiple:
     buyer: indexed(address)
     receiver: indexed(address)
@@ -83,10 +94,32 @@ event ExchangeMultiple:
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 is_approved: HashMap[address, HashMap[address, bool]]
 
+# SNX
+SNX_ADDRESS_RESOLVER: constant(address) = 0x823bE81bbF96BEc0e25CA13170F5AaCb5B79ba83
+SNX_TRACKING_CODE: constant(bytes32) = 0x4355525645000000000000000000000000000000000000000000000000000000
+SNX_EXCHANGE_RATES_NAME: constant(bytes32) = 0x45786368616E6765526174657300000000000000000000000000000000000000
+snx_currency_keys: HashMap[address, bytes32]
+
+
 @external
 @payable
 def __default__():
     pass
+
+
+@external
+def __init__():
+    self.snx_currency_keys[0x10A5F7D9D65bCc2734763444D4940a31b109275f] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
+    self.snx_currency_keys[0xa8E31E3C38aDD6052A9407298FAEB8fD393A6cF9] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
+    self.snx_currency_keys[0xE1cc2332852B2Ac0dA59A1f9D3051829f4eF3c1C] = 0x734a505900000000000000000000000000000000000000000000000000000000  # sJPY
+    self.snx_currency_keys[0xfb020CA7f4e8C4a5bBBe060f59a249c6275d2b69] = 0x7341554400000000000000000000000000000000000000000000000000000000  # sAUD
+    self.snx_currency_keys[0xdc883b9d9Ee16f74bE08826E68dF4C9D9d26e8bD] = 0x7347425000000000000000000000000000000000000000000000000000000000  # sGBP
+    self.snx_currency_keys[0xBb5b03E920cF702De5A3bA9Fc1445aF4B3919c88] = 0x7343484600000000000000000000000000000000000000000000000000000000  # sCHF
+    self.snx_currency_keys[0xdAe6C79c46aB3B280Ca28259000695529cbD1339] = 0x734b525700000000000000000000000000000000000000000000000000000000  # sKRW
+    self.snx_currency_keys[0x1cB004a8e84a5CE95C1fF895EE603BaC8EC506c7] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
+    self.snx_currency_keys[0x5D4C724BFe3a228Ff0E29125Ac1571FE093700a4] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
+    self.snx_currency_keys[0x07C1E81C345A7c58d7c24072EFc5D929BD0647AD] = 0x7345544842544300000000000000000000000000000000000000000000000000  # sETHBTC
+
 
 @external
 @payable
@@ -223,6 +256,8 @@ def exchange_multiple(
                 WETH(swap).withdraw(amount)
             else:
                 raise "One of the coins must be ETH for swap type 15"
+        elif params[2] == 16:
+            Synthetix(swap).exchangeAtomically(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], SNX_TRACKING_CODE, 0)
         else:
             raise "Bad swap type"
 
@@ -296,12 +331,15 @@ def get_exchange_multiple_amount(
                   Polygon meta-factories underlying swaps.
     @return Expected amount of the final output token
     """
+    input_token: address = _route[0]
     amount: uint256 = _amount
+    output_token: address = ZERO_ADDRESS
 
     for i in range(1,5):
         # 4 rounds of iteration to perform up to 4 swaps
         swap: address = _route[i*2-1]
         pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 4)
+        output_token = _route[i * 2]
         params: uint256[3] = _swap_params[i-1]  # i, j, swap type
 
         # Calc output amount according to the swap type
@@ -342,11 +380,16 @@ def get_exchange_multiple_amount(
         elif params[2] == 15:
             # ETH <--> WETH rate is 1:1
             pass
+        elif params[2] == 16:
+            snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
+            amount = SynthetixExchangeRates(snx_exchange_rates).effectiveValue(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token])
         else:
             raise "Bad swap type"
 
         # check if this was the last swap
         if i == 4 or _route[i*2+1] == ZERO_ADDRESS:
             break
+        # if there is another swap, the output token becomes the input for the next round
+        input_token = output_token
 
     return amount
