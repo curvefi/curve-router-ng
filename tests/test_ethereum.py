@@ -18,10 +18,13 @@ def format_swap_params(swap_params: list[list[int]]) -> list[list[int]]:
     return swap_params + [[0, 0, 0]] * (MAX_STEPS - len(swap_params))
 
 
-def test_16(router, coins, margo):
-    # sUSD -> sETH
-    coin1 = coins["susd"]
-    coin2 = coins["seth"]
+@pytest.mark.parametrize("coin1_name", ["susd", "seur", "seth", "sbtc"])
+@pytest.mark.parametrize("coin2_name", ["susd", "seur", "seth", "sbtc"])
+def test_16(router, coins, margo, coin1_name, coin2_name):
+    if coin1_name == coin2_name:
+        return
+    coin1 = coins[coin1_name]
+    coin2 = coins[coin2_name]
     route = format_route([coin1.address, "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F", coin2.address])
     swap_params = format_swap_params([[0, 0, 16]])
     amount = 100 * 10**coin1.decimals()
@@ -32,4 +35,4 @@ def test_16(router, coins, margo):
     balances = [coin1.balanceOf(margo), coin2.balanceOf(margo)]
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
+    assert balances[1] - initial_balances[1] == expected
