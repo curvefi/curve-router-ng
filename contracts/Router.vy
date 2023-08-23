@@ -75,18 +75,17 @@ interface WETH:
 interface Synthetix:
     def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
 
-interface SynthetixExchangeRates:
-    def effectiveAtomicValueAndRates(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32) -> AtomicValueAndRates: view
+interface SynthetixExchanger:
+    def getAmountsForAtomicExchange(sourceAmount: uint256, sourceCurrencyKey: bytes32, destinationCurrencyKey: bytes32) -> AtomicAmountAndFee: view
 
 interface SynthetixAddressResolver:
     def getAddress(name: bytes32) -> address: view
 
 
-struct AtomicValueAndRates:
-    value: uint256
-    systemValue: uint256
-    systemSourceRate: uint256
-    systemDestinationRate: uint256
+struct AtomicAmountAndFee:
+    amountReceived: uint256
+    fee: uint256
+    exchangeFeeRate: uint256
 
 
 event ExchangeMultiple:
@@ -104,7 +103,7 @@ is_approved: HashMap[address, HashMap[address, bool]]
 # SNX
 SNX_ADDRESS_RESOLVER: constant(address) = 0x823bE81bbF96BEc0e25CA13170F5AaCb5B79ba83
 SNX_TRACKING_CODE: constant(bytes32) = 0x4355525645000000000000000000000000000000000000000000000000000000
-SNX_EXCHANGE_RATES_NAME: constant(bytes32) = 0x45786368616E6765526174657300000000000000000000000000000000000000
+SNX_EXCHANGE_RATES_NAME: constant(bytes32) = 0x45786368616E6765720000000000000000000000000000000000000000000000
 snx_currency_keys: HashMap[address, bytes32]
 
 
@@ -383,10 +382,10 @@ def get_dy(
             pass
         elif params[2] == 16:
             snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
-            atomic_value_and_rates: AtomicValueAndRates = SynthetixExchangeRates(snx_exchange_rates).effectiveAtomicValueAndRates(
-                self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token]
+            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchange_rates).getAmountsForAtomicExchange(
+                amount, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
             )
-            amount = atomic_value_and_rates.value
+            amount = atomic_amount_and_fee.amountReceived
         else:
             raise "Bad swap type"
 
