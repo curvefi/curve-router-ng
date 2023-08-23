@@ -76,10 +76,17 @@ interface Synthetix:
     def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
 
 interface SynthetixExchangeRates:
-    def effectiveValue(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32) -> uint256: view
+    def effectiveAtomicValueAndRates(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32) -> AtomicValueAndRates: view
 
 interface SynthetixAddressResolver:
     def getAddress(name: bytes32) -> address: view
+
+
+struct AtomicValueAndRates:
+    value: uint256
+    systemValue: uint256
+    systemSourceRate: uint256
+    systemDestinationRate: uint256
 
 
 event ExchangeMultiple:
@@ -109,16 +116,16 @@ def __default__():
 
 @external
 def __init__():
-    self.snx_currency_keys[0x10A5F7D9D65bCc2734763444D4940a31b109275f] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
-    self.snx_currency_keys[0xa8E31E3C38aDD6052A9407298FAEB8fD393A6cF9] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
-    self.snx_currency_keys[0xE1cc2332852B2Ac0dA59A1f9D3051829f4eF3c1C] = 0x734a505900000000000000000000000000000000000000000000000000000000  # sJPY
-    self.snx_currency_keys[0xfb020CA7f4e8C4a5bBBe060f59a249c6275d2b69] = 0x7341554400000000000000000000000000000000000000000000000000000000  # sAUD
-    self.snx_currency_keys[0xdc883b9d9Ee16f74bE08826E68dF4C9D9d26e8bD] = 0x7347425000000000000000000000000000000000000000000000000000000000  # sGBP
-    self.snx_currency_keys[0xBb5b03E920cF702De5A3bA9Fc1445aF4B3919c88] = 0x7343484600000000000000000000000000000000000000000000000000000000  # sCHF
-    self.snx_currency_keys[0xdAe6C79c46aB3B280Ca28259000695529cbD1339] = 0x734b525700000000000000000000000000000000000000000000000000000000  # sKRW
-    self.snx_currency_keys[0x1cB004a8e84a5CE95C1fF895EE603BaC8EC506c7] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
-    self.snx_currency_keys[0x5D4C724BFe3a228Ff0E29125Ac1571FE093700a4] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
-    self.snx_currency_keys[0x07C1E81C345A7c58d7c24072EFc5D929BD0647AD] = 0x7345544842544300000000000000000000000000000000000000000000000000  # sETHBTC
+    self.snx_currency_keys[0x57Ab1ec28D129707052df4dF418D58a2D46d5f51] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
+    self.snx_currency_keys[0xD71eCFF9342A5Ced620049e616c5035F1dB98620] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
+    self.snx_currency_keys[0xF6b1C627e95BFc3c1b4c9B825a032Ff0fBf3e07d] = 0x734a505900000000000000000000000000000000000000000000000000000000  # sJPY
+    self.snx_currency_keys[0xF48e200EAF9906362BB1442fca31e0835773b8B4] = 0x7341554400000000000000000000000000000000000000000000000000000000  # sAUD
+    self.snx_currency_keys[0x97fe22E7341a0Cd8Db6F6C021A24Dc8f4DAD855F] = 0x7347425000000000000000000000000000000000000000000000000000000000  # sGBP
+    self.snx_currency_keys[0x0F83287FF768D1c1e17a42F44d644D7F22e8ee1d] = 0x7343484600000000000000000000000000000000000000000000000000000000  # sCHF
+    self.snx_currency_keys[0x269895a3dF4D73b077Fc823dD6dA1B95f72Aaf9B] = 0x734b525700000000000000000000000000000000000000000000000000000000  # sKRW
+    self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
+    self.snx_currency_keys[0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
+    self.snx_currency_keys[0x104eDF1da359506548BFc7c25bA1E28C16a70235] = 0x7345544842544300000000000000000000000000000000000000000000000000  # sETHBTC
 
 
 @external
@@ -382,7 +389,10 @@ def get_exchange_multiple_amount(
             pass
         elif params[2] == 16:
             snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
-            amount = SynthetixExchangeRates(snx_exchange_rates).effectiveValue(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token])
+            atomic_value_and_rates: AtomicValueAndRates = SynthetixExchangeRates(snx_exchange_rates).effectiveAtomicValueAndRates(
+                self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token]
+            )
+            amount = atomic_value_and_rates.value
         else:
             raise "Bad swap type"
 
