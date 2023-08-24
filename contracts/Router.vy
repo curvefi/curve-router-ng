@@ -71,6 +71,24 @@ interface WETH:
     def deposit(): payable
     def withdraw(_amount: uint256): nonpayable
 
+interface stETH:
+    def submit(_refferer: address): payable
+
+interface frxETHMinter:
+    def submit(): payable
+
+interface wstETH:
+    def getWstETHByStETH(_stETHAmount: uint256) -> uint256: view
+    def getStETHByWstETH(_wstETHAmount: uint256) -> uint256: view
+    def wrap(_stETHAmount: uint256) -> uint256: nonpayable
+    def unwrap(_wstETHAmount: uint256) -> uint256: nonpayable
+
+interface sfrxETH:
+    def convertToShares(assets: uint256) -> uint256: view
+    def convertToAssets(shares: uint256) -> uint256: view
+    def deposit(assets: uint256, receiver: address) -> uint256: nonpayable
+    def redeem(shares: uint256, receiver: address, owner: address) -> uint256: nonpayable
+
 # SNX
 interface Synthetix:
     def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
@@ -98,6 +116,9 @@ event ExchangeMultiple:
     amount_bought: uint256
 
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
+STETH_ADDRESS: constant(address) = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
+FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
+
 is_approved: HashMap[address, HashMap[address, bool]]
 
 # SNX
@@ -120,6 +141,8 @@ def __init__():
     self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
     self.snx_currency_keys[0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
 
+    self.is_approved[0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0][0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0] = True  # wstETH
+    self.is_approved[0xac3E018457B222d93114458476f3E3416Abbe38F][0xac3E018457B222d93114458476f3E3416Abbe38F] = True  # sfrxETH
 
 @external
 @payable
@@ -181,11 +204,11 @@ def exchange(
     for i in range(1,5):
         # 4 rounds of iteration to perform up to 4 swaps
         swap: address = _route[i*2-1]
-        pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 4)
+        pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 6)
         output_token = _route[i*2]
-        params: uint256[3] = _swap_params[i-1]  # i, j, swap type
+        params: uint256[3] = _swap_params[i-1]  # i, j, swap_type
 
-        if not self.is_approved[input_token][swap] and params[2] != 16:
+        if not self.is_approved[input_token][swap] and params[2] != 18:
             # approve the pool to transfer the input token
             response: Bytes[32] = raw_call(
                 input_token,
@@ -196,7 +219,7 @@ def exchange(
                 ),
                 max_outsize=32,
             )
-            if len(response) != 0:
+            if len(response) != 0:  # For ETH
                 assert convert(response, bool)
             self.is_approved[input_token][swap] = True
 
@@ -257,6 +280,25 @@ def exchange(
             else:
                 raise "One of the coins must be ETH for swap type 15"
         elif params[2] == 16:
+            assert input_token == ETH_ADDRESS, "Input coin must be ETH for swap type 16"
+            if output_token == STETH_ADDRESS:
+                stETH(swap).submit(0x0000000000000000000000000000000000000000, value=amount)
+            elif output_token == FRXETH_ADDRESS:
+                frxETHMinter(swap).submit(value=amount)
+            else:
+                raise "Swap type 16 is for ETH -> stETH or ETH -> frxETH only"
+        elif params[2] == 17:
+            if input_token == STETH_ADDRESS:
+                wstETH(swap).wrap(amount)
+            elif output_token == STETH_ADDRESS:
+                wstETH(swap).unwrap(amount)
+            elif input_token == FRXETH_ADDRESS:
+                sfrxETH(swap).deposit(amount, self)
+            elif output_token == FRXETH_ADDRESS:
+                sfrxETH(swap).redeem(amount, self, self)
+            else:
+                raise "Swap type 17 is for stETH <-> wstETH or frxETH <-> sfrxETH only"
+        elif params[2] == 18:
             Synthetix(swap).exchangeAtomically(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], SNX_TRACKING_CODE, 0)
         else:
             raise "Bad swap type"
@@ -377,10 +419,23 @@ def get_dy(
         elif params[2] == 14:
             # The number of coins doesn't matter here
             amount = CryptoBasePool3Coins(swap).calc_withdraw_one_coin(amount, params[1])
-        elif params[2] == 15:
+        elif params[2] in [15, 16]:
             # ETH <--> WETH rate is 1:1
+            # ETH ---> stETH rate is 1:1
+            # ETH ---> frxETH rate is 1:1
             pass
-        elif params[2] == 16:
+        elif params[2] == 17:
+            if input_token == STETH_ADDRESS:
+                amount = wstETH(swap).getWstETHByStETH(amount)
+            elif output_token == STETH_ADDRESS:
+                amount = wstETH(swap).getStETHByWstETH(amount)
+            elif input_token == FRXETH_ADDRESS:
+                amount = sfrxETH(swap).convertToShares(amount)
+            elif output_token == FRXETH_ADDRESS:
+                amount = sfrxETH(swap).convertToAssets(amount)
+            else:
+                raise "Swap type 17 is for stETH <-> wstETH or frxETH <-> sfrxETH only"
+        elif params[2] == 18:
             snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
             atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchange_rates).getAmountsForAtomicExchange(
                 amount, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
