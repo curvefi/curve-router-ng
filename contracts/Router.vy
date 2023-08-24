@@ -185,7 +185,7 @@ def exchange(
         output_token = _route[i*2]
         params: uint256[3] = _swap_params[i-1]  # i, j, swap type
 
-        if not self.is_approved[input_token][swap]:
+        if not self.is_approved[input_token][swap] and params[2] != 16:
             # approve the pool to transfer the input token
             response: Bytes[32] = raw_call(
                 input_token,
