@@ -49,9 +49,7 @@ interface LendingBasePool3Coins:
     def remove_liquidity_one_coin(token_amount: uint256, i: int128, min_amount: uint256, use_underlying: bool) -> uint256: nonpayable
     def calc_withdraw_one_coin(token_amount: uint256, i: int128) -> uint256: view
 
-interface CryptoBasePool3Coins:
-    def add_liquidity(amounts: uint256[3], min_mint_amount: uint256, use_underlying: bool): nonpayable
-    def calc_token_amount(amounts: uint256[3], is_deposit: bool) -> uint256: view
+interface CryptoBasePool:
     def remove_liquidity_one_coin(token_amount: uint256, i: uint256, min_amount: uint256): nonpayable
     def calc_withdraw_one_coin(token_amount: uint256, i: uint256) -> uint256: view
 
@@ -138,11 +136,12 @@ def __default__():
 def __init__():
     self.snx_currency_keys[0x57Ab1ec28D129707052df4dF418D58a2D46d5f51] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
     self.snx_currency_keys[0xD71eCFF9342A5Ced620049e616c5035F1dB98620] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
-    self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
     self.snx_currency_keys[0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
+    self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
 
     self.is_approved[0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0][0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0] = True  # wstETH
     self.is_approved[0xac3E018457B222d93114458476f3E3416Abbe38F][0xac3E018457B222d93114458476f3E3416Abbe38F] = True  # sfrxETH
+
 
 @external
 @payable
@@ -171,7 +170,10 @@ def exchange(
                         6 for factory crypto-meta pools underlying exchange (`exchange` method in zap),
                         7-11 for wrapped coin (underlying for lending or fake pool) -> LP token "exchange" (actually `add_liquidity`),
                         12-14 for LP token -> wrapped coin (underlying for lending pool) "exchange" (actually `remove_liquidity_one_coin`)
-                        15 for WETH -> ETH "exchange" (actually deposit/withdraw)
+                        15 for WETH <-> ETH "exchange" (actually deposit/withdraw)
+                        16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
+                        17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
+                        18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
     @param _amount The amount of `_route[0]` token being sent.
     @param _expected The minimum amount received after the final swap.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
@@ -238,9 +240,9 @@ def exchange(
                 CryptoPool(swap).exchange(params[0], params[1], amount, 0)
         elif params[2] == 4:
             CryptoPool(swap).exchange_underlying(params[0], params[1], amount, 0, value=eth_amount)
-        elif params[2] == 5:
+        elif params[2] == 5:  # swap is zap here
             LendingBasePoolMetaZap(swap).exchange_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, 0)
-        elif params[2] == 6:
+        elif params[2] == 6:  # swap is zap here
             use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
             CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth, value=eth_amount)
         elif params[2] == 7:
@@ -271,14 +273,14 @@ def exchange(
             LendingBasePool3Coins(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0, True) # example: aave on Polygon
         elif params[2] == 14:
             # The number of coins doesn't matter here
-            CryptoBasePool3Coins(swap).remove_liquidity_one_coin(amount, params[1], 0) # example: atricrypto3 on Polygon
+            CryptoBasePool(swap).remove_liquidity_one_coin(amount, params[1], 0) # example: atricrypto3 on Polygon
         elif params[2] == 15:
             if input_token == ETH_ADDRESS:
                 WETH(swap).deposit(value=amount)
             elif output_token == ETH_ADDRESS:
                 WETH(swap).withdraw(amount)
             else:
-                raise "One of the coins must be ETH for swap type 15"
+                raise "Swap type 15 is for ETH <-> WETH"
         elif params[2] == 16:
             assert input_token == ETH_ADDRESS, "Input coin must be ETH for swap type 16"
             if output_token == STETH_ADDRESS:
@@ -367,7 +369,10 @@ def get_dy(
                         6 for factory crypto-meta pools underlying exchange (`exchange` method in zap),
                         7-11 for wrapped coin (underlying for lending pool) -> LP token "exchange" (actually `add_liquidity`),
                         12-14 for LP token -> wrapped coin (underlying for lending or fake pool) "exchange" (actually `remove_liquidity_one_coin`)
-                        15 for WETH -> ETH "exchange" (actually deposit/withdraw)
+                        15 for WETH <-> ETH "exchange" (actually deposit/withdraw)
+                        16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
+                        17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
+                        18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
     @param _amount The amount of `_route[0]` token to be sent.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
                   Polygon meta-factories underlying swaps.
@@ -393,9 +398,9 @@ def get_dy(
             amount = CryptoPool(swap).get_dy(params[0], params[1], amount)
         elif params[2] == 4:
             amount = CryptoPool(swap).get_dy_underlying(params[0], params[1], amount)
-        elif params[2] == 5:
+        elif params[2] == 5:  # swap is zap here
             amount = CurvePool(pool).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
-        elif params[2] == 6:
+        elif params[2] == 6:  # swap is zap here
             amount = CryptoMetaZap(swap).get_dy(pool, params[0], params[1], amount)
         elif params[2] == 7:
             _amounts: uint256[2] = [0, 0]
@@ -418,7 +423,7 @@ def get_dy(
             amount = BasePool3Coins(swap).calc_withdraw_one_coin(amount, convert(params[1], int128))
         elif params[2] == 14:
             # The number of coins doesn't matter here
-            amount = CryptoBasePool3Coins(swap).calc_withdraw_one_coin(amount, params[1])
+            amount = CryptoBasePool(swap).calc_withdraw_one_coin(amount, params[1])
         elif params[2] in [15, 16]:
             # ETH <--> WETH rate is 1:1
             # ETH ---> stETH rate is 1:1
