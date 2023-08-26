@@ -19,6 +19,10 @@
     "decimals": 18,
     "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
   },
+  "weth": {
+    "decimals": 18,
+    "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+  },
   "susd": {
     "name": "SUSD",
     "decimals": 18,
@@ -58,5 +62,58 @@
     "name": "sfrxETH",
     "decimals": 18,
     "address": "0xac3E018457B222d93114458476f3E3416Abbe38F"
+  },
+  "usdd": {
+    "name": "USDD",
+    "decimals": 18,
+    "address": "0x0c10bf8fcb7bf5412187a595ab97a3609160b5c6"
+  },
+  "3crv": {
+    "name": "3CRV",
+    "decimals": 18,
+    "address": "0x6c3f90f043a72fa612cbac8115ee7e52bde6e490"
+  },
+  "cdai": {
+    "name": "cDAI",
+    "decimals": 8,
+    "address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+    "interface": "cERC20"
+  },
+  "wbtc": {
+    "name": "WBTC",
+    "decimals": 8,
+    "address": "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599"
+  },
+  "eurt": {
+    "decimals": 6,
+    "address": "0xC581b735A1688071A1746c968e0798D642EDE491"
+  },
+  "dchf": {
+    "decimals": 18,
+    "address": "0x045da4bfe02b320f4403674b3b7d121737727a36"
+  },
+  "cvx": {
+    "decimals": 18,
+    "address": "0x4e3fbd56cd56c3e72c1403e103b45db9da5b9d2b"
+  },
+  "frax": {
+    "decimals": 18,
+    "address": "0x853d955aCEf822Db058eb8505911ED77F175b99e"
+  },
+  "fraxbp": {
+    "decimals": 18,
+    "address": "0x3175Df0976dFA876431C2E9eE6Bc45b65d3473CC"
+  },
+  "usdp": {
+    "decimals": 18,
+    "address": "0x8E870D67F660D95d5be530380D0eC0bd388289E1"
+  },
+  "fraxusdplp": {
+    "decimals": 18,
+    "address": "0xFC2838a17D8e8B1D5456E0a351B0708a09211147"
+  },
+  "sbtc2lp": {
+    "decimals": 18,
+    "address": "0x051d7e5609917Bd9b73f04BAc0DED8Dd46a74301"
   }
 }
