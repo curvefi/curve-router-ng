@@ -125,14 +125,18 @@ event ExchangeMultiple:
     buyer: indexed(address)
     receiver: indexed(address)
     route: address[9]
-    swap_params: uint256[3][4]
+    swap_params: uint256[5][4]
     pools: address[4]
     amount_sold: uint256
     amount_bought: uint256
 
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 STETH_ADDRESS: constant(address) = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
+WSTETH_ADDRESS: constant(address) = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0
 FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
+SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
+
+WETH_ADDRESS: immutable(address)
 
 is_approved: HashMap[address, HashMap[address, bool]]
 is_tricrypto_meta: HashMap[address, bool]
@@ -155,15 +159,16 @@ def __default__():
 
 
 @external
-def __init__(_stable_calc: address, _crypto_calc: address, _tricrypto_meta_pools: address[2]):
+def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _tricrypto_meta_pools: address[2]):
     self.snx_currency_keys[0x57Ab1ec28D129707052df4dF418D58a2D46d5f51] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
     self.snx_currency_keys[0xD71eCFF9342A5Ced620049e616c5035F1dB98620] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
     self.snx_currency_keys[0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
     self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
 
-    self.is_approved[0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0][0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0] = True  # wstETH
-    self.is_approved[0xac3E018457B222d93114458476f3E3416Abbe38F][0xac3E018457B222d93114458476f3E3416Abbe38F] = True  # sfrxETH
+    self.is_approved[WSTETH_ADDRESS][WSTETH_ADDRESS] = True
+    self.is_approved[SFRXETH_ADDRESS][SFRXETH_ADDRESS] = True
 
+    WETH_ADDRESS = _weth
     STABLE_CALC = StableCalc(_stable_calc)
     CRYPTO_CALC = CryptoCalc(_crypto_calc)
 
@@ -177,7 +182,7 @@ def __init__(_stable_calc: address, _crypto_calc: address, _tricrypto_meta_pools
 @payable
 def exchange(
     _route: address[9],
-    _swap_params: uint256[3][4],
+    _swap_params: uint256[5][4],
     _amount: uint256,
     _expected: uint256,
     _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
@@ -190,20 +195,26 @@ def exchange(
     @param _route Array of [initial token, pool, token, pool, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
-    @param _swap_params Multidimensional array of [i, j, swap type] where i and j are the correct
-                        values for the n'th pool in `_route`. The swap type should be
+    @param _swap_params Multidimensional array of [i, j, swap type, pool_type, n_coins] where
+                        i is the index of input token
+                        j is the index of output token
+
+                        The swap_type should be:
                         1 for a stableswap `exchange`,
                         2 for stableswap `exchange_underlying`,
                         3 for a cryptoswap `exchange`,
                         4 for a cryptoswap `exchange_underlying`,
                         5 for factory metapools with lending base pool `exchange_underlying`,
                         6 for factory crypto-meta pools underlying exchange (`exchange` method in zap),
-                        7-11 for wrapped coin (underlying for lending or fake pool) -> LP token "exchange" (actually `add_liquidity`),
-                        12-14 for LP token -> wrapped coin (underlying for lending pool) "exchange" (actually `remove_liquidity_one_coin`)
+                        7-11 for wrapped coin (underlying for lending pool) -> LP token "exchange" (actually `add_liquidity`),
+                        12-14 for LP token -> wrapped coin (underlying for lending or fake pool) "exchange" (actually `remove_liquidity_one_coin`)
                         15 for WETH <-> ETH "exchange" (actually deposit/withdraw)
                         16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
                         17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
                         18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
+
+                        pool_type: 0 - stable, 1 - crypto, 2- llamma
+                        n_coins is the number of coins in pool
     @param _amount The amount of `_route[0]` token being sent.
     @param _expected The minimum amount received after the final swap.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
@@ -238,7 +249,7 @@ def exchange(
         swap: address = _route[i*2-1]
         pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 6)
         output_token = _route[i*2]
-        params: uint256[3] = _swap_params[i-1]  # i, j, swap_type
+        params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
 
         if not self.is_approved[input_token][swap] and params[2] != 18:
             # approve the pool to transfer the input token
@@ -260,77 +271,74 @@ def exchange(
             eth_amount = amount
         # perform the swap according to the swap type
         if params[2] == 1:
-            CurvePool(swap).exchange(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
+            if params[3] == 0:  # stable
+                CurvePool(swap).exchange(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
+            else:  # crypto or llamma
+                if input_token == ETH_ADDRESS or output_token == ETH_ADDRESS:
+                    CryptoPoolETH(swap).exchange(params[0], params[1], amount, 0, True, value=eth_amount)
+                else:
+                    CryptoPool(swap).exchange(params[0], params[1], amount, 0)
         elif params[2] == 2:
-            CurvePool(swap).exchange_underlying(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
-        elif params[2] == 3:
-            if input_token == ETH_ADDRESS or output_token == ETH_ADDRESS:
-                CryptoPoolETH(swap).exchange(params[0], params[1], amount, 0, True, value=eth_amount)
-            else:
-                CryptoPool(swap).exchange(params[0], params[1], amount, 0)
+            if params[3] == 0:  # stable
+                CurvePool(swap).exchange_underlying(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
+            else:  # crypto
+                CryptoPool(swap).exchange_underlying(params[0], params[1], amount, 0, value=eth_amount)
+        elif params[2] == 3:  # swap is zap here
+            if params[3] == 0:  # stable
+                LendingBasePoolMetaZap(swap).exchange_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, 0)
+            else:  # crypto
+                use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
+                CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth, value=eth_amount)
         elif params[2] == 4:
-            CryptoPool(swap).exchange_underlying(params[0], params[1], amount, 0, value=eth_amount)
-        elif params[2] == 5:  # swap is zap here
-            LendingBasePoolMetaZap(swap).exchange_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, 0)
-        elif params[2] == 6:  # swap is zap here
-            use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
-            CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth, value=eth_amount)
-        elif params[2] == 7:
-            _amounts: uint256[2] = [0, 0]
-            _amounts[params[0]] = amount
-            BasePool2Coins(swap).add_liquidity(_amounts, 0)
-        elif params[2] == 8:
-            _amounts: uint256[3] = [0, 0, 0]
-            _amounts[params[0]] = amount
-            BasePool3Coins(swap).add_liquidity(_amounts, 0)
-        elif params[2] == 9:
+            if params[4] == 2:
+                _amounts: uint256[2] = [0, 0]
+                _amounts[params[0]] = amount
+                BasePool2Coins(swap).add_liquidity(_amounts, 0)
+            elif params[4] == 3:
+                _amounts: uint256[3] = [0, 0, 0]
+                _amounts[params[0]] = amount
+                BasePool3Coins(swap).add_liquidity(_amounts, 0)
+            elif params[4] == 4:
+                _amounts: uint256[4] = [0, 0, 0, 0]
+                _amounts[params[0]] = amount
+                BasePool4Coins(swap).add_liquidity(_amounts, 0)
+            elif params[4] == 5:
+                _amounts: uint256[5] = [0, 0, 0, 0, 0]
+                _amounts[params[0]] = amount
+                BasePool5Coins(swap).add_liquidity(_amounts, 0)
+        elif params[2] == 5:
             _amounts: uint256[3] = [0, 0, 0]
             _amounts[params[0]] = amount
             LendingBasePool3Coins(swap).add_liquidity(_amounts, 0, True) # example: aave on Polygon
-        elif params[2] == 10:
-            _amounts: uint256[4] = [0, 0, 0, 0]
-            _amounts[params[0]] = amount
-            BasePool4Coins(swap).add_liquidity(_amounts, 0)
-        elif params[2] == 11:
-            _amounts: uint256[5] = [0, 0, 0, 0, 0]
-            _amounts[params[0]] = amount
-            BasePool5Coins(swap).add_liquidity(_amounts, 0)
-        elif params[2] == 12:
+        elif params[2] == 6:
             # The number of coins doesn't matter here
-            BasePool3Coins(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
-        elif params[2] == 13:
+            if params[3] == 0:  # stable
+                BasePool3Coins(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
+            else:  # crypto
+                CryptoBasePool(swap).remove_liquidity_one_coin(amount, params[1], 0)  # example: atricrypto3 on Polygon
+        elif params[2] == 7:
             # The number of coins doesn't matter here
             LendingBasePool3Coins(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0, True) # example: aave on Polygon
-        elif params[2] == 14:
-            # The number of coins doesn't matter here
-            CryptoBasePool(swap).remove_liquidity_one_coin(amount, params[1], 0) # example: atricrypto3 on Polygon
-        elif params[2] == 15:
-            if input_token == ETH_ADDRESS:
+        elif params[2] == 8:
+            if input_token == ETH_ADDRESS and output_token == WETH_ADDRESS:
                 WETH(swap).deposit(value=amount)
-            elif output_token == ETH_ADDRESS:
+            elif input_token == WETH_ADDRESS and output_token == ETH_ADDRESS:
                 WETH(swap).withdraw(amount)
-            else:
-                raise "Swap type 15 is for ETH <-> WETH"
-        elif params[2] == 16:
-            assert input_token == ETH_ADDRESS, "Input coin must be ETH for swap type 16"
-            if output_token == STETH_ADDRESS:
+            elif input_token == ETH_ADDRESS and output_token == STETH_ADDRESS:
                 stETH(swap).submit(0x0000000000000000000000000000000000000000, value=amount)
-            elif output_token == FRXETH_ADDRESS:
+            elif input_token == ETH_ADDRESS and output_token == FRXETH_ADDRESS:
                 frxETHMinter(swap).submit(value=amount)
-            else:
-                raise "Swap type 16 is for ETH -> stETH or ETH -> frxETH only"
-        elif params[2] == 17:
-            if input_token == STETH_ADDRESS:
+            elif input_token == STETH_ADDRESS and output_token == WSTETH_ADDRESS:
                 wstETH(swap).wrap(amount)
-            elif output_token == STETH_ADDRESS:
+            elif input_token == WSTETH_ADDRESS and output_token == STETH_ADDRESS:
                 wstETH(swap).unwrap(amount)
-            elif input_token == FRXETH_ADDRESS:
+            elif input_token == FRXETH_ADDRESS and output_token == SFRXETH_ADDRESS:
                 sfrxETH(swap).deposit(amount, self)
-            elif output_token == FRXETH_ADDRESS:
+            elif input_token == SFRXETH_ADDRESS and output_token == FRXETH_ADDRESS:
                 sfrxETH(swap).redeem(amount, self, self)
             else:
-                raise "Swap type 17 is for stETH <-> wstETH or frxETH <-> sfrxETH only"
-        elif params[2] == 18:
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
+        elif params[2] == 9:
             Synthetix(swap).exchangeAtomically(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], SNX_TRACKING_CODE, 0)
         else:
             raise "Bad swap type"
@@ -378,7 +386,7 @@ def exchange(
 @external
 def get_dy(
     _route: address[9],
-    _swap_params: uint256[3][4],
+    _swap_params: uint256[5][4],
     _amount: uint256,
     _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]
 ) -> uint256:
@@ -389,8 +397,11 @@ def get_dy(
     @param _route Array of [initial token, pool, token, pool, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
-    @param _swap_params Multidimensional array of [i, j, swap type] where i and j are the correct
-                        values for the n'th pool in `_route`. The swap type should be
+    @param _swap_params Multidimensional array of [i, j, swap type, pool_type, n_coins] where
+                        i is the index of input token
+                        j is the index of output token
+
+                        The swap_type should be:
                         1 for a stableswap `exchange`,
                         2 for stableswap `exchange_underlying`,
                         3 for a cryptoswap `exchange`,
@@ -403,6 +414,9 @@ def get_dy(
                         16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
                         17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
                         18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
+
+                        pool_type: 0 - stable, 1 - crypto, 2- llamma
+                        n_coins is the number of coins in pool
     @param _amount The amount of `_route[0]` token to be sent.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
                   Polygon meta-factories underlying swaps.
@@ -417,60 +431,73 @@ def get_dy(
         swap: address = _route[i*2-1]
         pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 4)
         output_token = _route[i * 2]
-        params: uint256[3] = _swap_params[i-1]  # i, j, swap type
+        params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
 
         # Calc output amount according to the swap type
         if params[2] == 1:
-            amount = CurvePool(swap).get_dy(convert(params[0], int128), convert(params[1], int128), amount)
-        elif params[2] == 2:
-            amount = CurvePool(swap).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
-        elif params[2] == 3:
-            amount = CryptoPool(swap).get_dy(params[0], params[1], amount)
-        elif params[2] == 4:
-            amount = CryptoPool(swap).get_dy_underlying(params[0], params[1], amount)
-        elif params[2] == 5:  # swap is zap here
-            amount = CurvePool(pool).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
-        elif params[2] == 6:  # swap is zap here
-            amount = CryptoMetaZap(swap).get_dy(pool, params[0], params[1], amount)
-        elif params[2] == 7:
-            _amounts: uint256[2] = [0, 0]
-            _amounts[params[0]] = amount
-            amount = BasePool2Coins(swap).calc_token_amount(_amounts, True)
-        elif params[2] in [8, 9]:
-            _amounts: uint256[3] = [0, 0, 0]
-            _amounts[params[0]] = amount
-            amount = BasePool3Coins(swap).calc_token_amount(_amounts, True)
-        elif params[2] == 10:
-            _amounts: uint256[4] = [0, 0, 0, 0]
-            _amounts[params[0]] = amount
-            amount = BasePool4Coins(swap).calc_token_amount(_amounts, True)
-        elif params[2] == 11:
-            _amounts: uint256[5] = [0, 0, 0, 0, 0]
-            _amounts[params[0]] = amount
-            amount = BasePool5Coins(swap).calc_token_amount(_amounts, True)
-        elif params[2] in [12, 13]:
-            # The number of coins doesn't matter here
-            amount = BasePool3Coins(swap).calc_withdraw_one_coin(amount, convert(params[1], int128))
-        elif params[2] == 14:
-            # The number of coins doesn't matter here
-            amount = CryptoBasePool(swap).calc_withdraw_one_coin(amount, params[1])
-        elif params[2] in [15, 16]:
-            # ETH <--> WETH rate is 1:1
-            # ETH ---> stETH rate is 1:1
-            # ETH ---> frxETH rate is 1:1
-            pass
-        elif params[2] == 17:
-            if input_token == STETH_ADDRESS:
-                amount = wstETH(swap).getWstETHByStETH(amount)
-            elif output_token == STETH_ADDRESS:
-                amount = wstETH(swap).getStETHByWstETH(amount)
-            elif input_token == FRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToShares(amount)
-            elif output_token == FRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
+            if params[3] == 0:
+                # stable
+                amount = CurvePool(swap).get_dy(convert(params[0], int128), convert(params[1], int128), amount)
             else:
-                raise "Swap type 17 is for stETH <-> wstETH or frxETH <-> sfrxETH only"
-        elif params[2] == 18:
+                # crypto or llamma
+                amount = CryptoPool(swap).get_dy(params[0], params[1], amount)
+        elif params[2] == 2:
+            if params[3] == 0:
+                # stable
+                amount = CurvePool(swap).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
+            else:
+                # crypto
+                amount = CryptoPool(swap).get_dy_underlying(params[0], params[1], amount)
+        elif params[2] == 3:
+            # swap is zap here
+            if params[3] == 0:
+                # stable
+                amount = CurvePool(pool).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
+            else:
+                # crypto
+                amount = CryptoMetaZap(swap).get_dy(pool, params[0], params[1], amount)
+        elif params[2] in [4, 5]:
+            if params[4] == 2:
+                _amounts: uint256[2] = [0, 0]
+                _amounts[params[0]] = amount
+                amount = BasePool2Coins(swap).calc_token_amount(_amounts, True)
+            elif params[4] == 3:
+                _amounts: uint256[3] = [0, 0, 0]
+                _amounts[params[0]] = amount
+                amount = BasePool3Coins(swap).calc_token_amount(_amounts, True)
+            elif params[4] == 4:
+                _amounts: uint256[4] = [0, 0, 0, 0]
+                _amounts[params[0]] = amount
+                amount = BasePool4Coins(swap).calc_token_amount(_amounts, True)
+            elif params[4] == 5:
+                _amounts: uint256[5] = [0, 0, 0, 0, 0]
+                _amounts[params[0]] = amount
+                amount = BasePool5Coins(swap).calc_token_amount(_amounts, True)
+        elif params[2] in [6, 7]:
+            # The number of coins doesn't matter here
+            if params[3] == 0:
+                # stable
+                amount = BasePool3Coins(swap).calc_withdraw_one_coin(amount, convert(params[1], int128))
+            else:
+                # crypto
+                amount = CryptoBasePool(swap).calc_withdraw_one_coin(amount, params[1])
+        elif params[2] == 8:
+            if input_token == WETH_ADDRESS or output_token == WETH_ADDRESS or output_token == STETH_ADDRESS or output_token == FRXETH_ADDRESS:
+                # ETH <--> WETH rate is 1:1
+                # ETH ---> stETH rate is 1:1
+                # ETH ---> frxETH rate is 1:1
+                pass
+            elif input_token == WSTETH_ADDRESS:
+                amount = wstETH(swap).getStETHByWstETH(amount)
+            elif output_token == WSTETH_ADDRESS:
+                amount = wstETH(swap).getWstETHByStETH(amount)
+            elif input_token == SFRXETH_ADDRESS:
+                amount = sfrxETH(swap).convertToAssets(amount)
+            elif output_token == SFRXETH_ADDRESS:
+                amount = sfrxETH(swap).convertToShares(amount)
+            else:
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
+        elif params[2] == 9:
             snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
             atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchange_rates).getAmountsForAtomicExchange(
                 amount, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
@@ -507,7 +534,7 @@ def get_dx(
     @param _route Array of [initial token, pool, token, pool, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
-    @param _swap_params Multidimensional array of [i, j, swap type, n_coins, pool_type] where
+    @param _swap_params Multidimensional array of [i, j, swap type, pool_type, n_coins] where
                         i is the index of input token
                         j is the index of output token
 
@@ -525,8 +552,8 @@ def get_dx(
                         17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
                         18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
 
-                        n_coins is the number of coins in pool
                         pool_type: 0 - stable, 1 - crypto, 2- llamma
+                        n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
                   Polygon meta-factories underlying swaps.
@@ -548,44 +575,48 @@ def get_dx(
         second_base_pool: address = _second_base_pools[i-1]
         second_base_token: address = _second_base_tokens[i-1]
         output_token = _route[i * 2]
-        params: uint256[5] = _swap_params[i-1]  # i, j, swap type, n_coins, pool type
-        n_coins: uint256 = params[3]
-        pool_type: uint256 = params[4]
+        params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, n_coins, pool_type
+        pool_type: uint256 = params[3]
+        n_coins: uint256 = params[4]
         is_meta: bool = base_pool != ZERO_ADDRESS
         is_double_meta: bool = second_base_pool != ZERO_ADDRESS
 
 
         # Calc a required input amount according to the swap type
         if params[2] == 1:
-            if not is_meta:
-                amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
-            else:
-                amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
-        elif params[2] in [2, 5]:
-            if not is_meta:
-                amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
-            else:
-                amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
-        elif params[2] == 3:
-            if pool_type == 1:  # crypto
+            if pool_type == 0:
+                # stable
+                if not is_meta:
+                    amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
+                else:
+                    amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
+            elif pool_type == 1:
+                # crypto
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
-            else:  # llamma
-                amount = Llamma(pool).get_dx(params[0], params[1], amount)
-        elif params[2] in [4, 6]:
-            if is_double_meta:  # swap is zap here
-                amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, swap, second_base_pool, second_base_token)
-            elif self.is_tricrypto_meta[pool]:
-                amount = CRYPTO_CALC.get_dx_tricrypto_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
             else:
-                amount = CRYPTO_CALC.get_dx_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
-        elif params[2] in [7, 8, 9, 10, 11]:
+                # llamma
+                amount = Llamma(pool).get_dx(params[0], params[1], amount)
+        elif params[2] in [2, 3]:
+            if pool_type == 0:  # stable
+                if not is_meta:
+                    amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
+                else:
+                    amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
+            else:  # crypto
+                if is_double_meta:  # swap is zap here
+                    amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, swap, second_base_pool, second_base_token)
+                elif self.is_tricrypto_meta[pool]:
+                    amount = CRYPTO_CALC.get_dx_tricrypto_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
+                else:
+                    amount = CRYPTO_CALC.get_dx_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
+        elif params[2] in [4, 5]:
             # The number of coins doesn't matter here.
             # This is not right. Should be something like calc_add_one_coin. But tests say that it's precise enough.
             if pool_type == 0:  # stable
                 amount = BasePool3Coins(swap).calc_withdraw_one_coin(amount, convert(params[0], int128))
             else:  # crypto
                 amount = CryptoBasePool(swap).calc_withdraw_one_coin(amount, params[0])
-        elif params[2] in [12, 13, 14]:
+        elif params[2] in [6, 7]:
             if n_coins == 2:
                 _amounts: uint256[2] = [0, 0]
                 _amounts[params[1]] = amount
@@ -602,23 +633,23 @@ def get_dx(
                 _amounts: uint256[5] = [0, 0, 0, 0, 0]
                 _amounts[params[1]] = amount
                 amount = BasePool5Coins(swap).calc_token_amount(_amounts, False)
-        elif params[2] in [15, 16]:
-            # ETH <--> WETH rate is 1:1
-            # ETH ---> stETH rate is 1:1
-            # ETH ---> frxETH rate is 1:1
-            pass
-        elif params[2] == 17:
-            if input_token == STETH_ADDRESS:
-                amount = wstETH(swap).getStETHByWstETH(amount)
-            elif output_token == STETH_ADDRESS:
+        elif params[2] == 8:
+            if input_token == WETH_ADDRESS or output_token == WETH_ADDRESS or output_token == STETH_ADDRESS or output_token == FRXETH_ADDRESS:
+                # ETH <--> WETH rate is 1:1
+                # ETH ---> stETH rate is 1:1
+                # ETH ---> frxETH rate is 1:1
+                pass
+            elif input_token == WSTETH_ADDRESS:
                 amount = wstETH(swap).getWstETHByStETH(amount)
-            elif input_token == FRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
-            elif output_token == FRXETH_ADDRESS:
+            elif output_token == WSTETH_ADDRESS:
+                amount = wstETH(swap).getStETHByWstETH(amount)
+            elif input_token == SFRXETH_ADDRESS:
                 amount = sfrxETH(swap).convertToShares(amount)
+            elif output_token == SFRXETH_ADDRESS:
+                amount = sfrxETH(swap).convertToAssets(amount)
             else:
-                raise "Swap type 17 is for stETH <-> wstETH or frxETH <-> sfrxETH only"
-        elif params[2] == 18:
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
+        elif params[2] == 9:
             snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
             atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchange_rates).getAmountsForAtomicExchange(
                 amount, self.snx_currency_keys[output_token], self.snx_currency_keys[input_token]
