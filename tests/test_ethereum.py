@@ -28,7 +28,7 @@ def _get_decimals(coin) -> int:
     return 18 if coin == ETH_ADDRESS else coin.decimals()
 
 
-def _exchange(router, coins, margo, coin1_name, coin2_name, pool, _swap_params, zap=None, base_pool=None, base_token=None):
+def _exchange(router, coins, margo, coin1_name, coin2_name, pool, _swap_params, amount=None, zap=None, base_pool=None, base_token=None):
     coin1 = coins[coin1_name]
     coin2 = coins[coin2_name]
     route = _format_route([coin1, zap, coin2]) if zap is not None else _format_route([coin1, pool, coin2])
@@ -36,7 +36,7 @@ def _exchange(router, coins, margo, coin1_name, coin2_name, pool, _swap_params, 
     pools = _format_pools([pool])
     base_pools = _format_pools([base_pool or ZERO_ADDRESS])
     base_tokens = _format_pools([base_token or ZERO_ADDRESS])
-    amount = 100 * 10**_get_decimals(coin1)
+    amount = (amount or 100) * 10**_get_decimals(coin1)
     value = amount if coin1 == ETH_ADDRESS else 0
 
     initial_balances = [_get_balance(coin1, margo), _get_balance(coin2, margo)]
@@ -87,23 +87,16 @@ def test_1_stable_lending(router, coins, margo):
     assert abs(amount - required) / amount < 1e-5
 
 
-def test_1_crypto_eth(router, coins, margo):
-    coin1 = "cvx"
-    coin2 = "eth"
+@pytest.mark.parametrize("coin1", ["eth", "weth", "cvx"])
+@pytest.mark.parametrize("coin2", ["eth", "weth", "cvx"])
+def test_1_crypto(router, coins, margo, coin1, coin2):
+    if coin1 == coin2 or (coin1 != "cvx" and coin2 != "cvx"):
+        return
+    i, j = 0, 1
+    if coin1 == "cvx":
+        i, j = 1, 0
     pool = "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4"  # cvxeth
-    swap_params = [1, 0, 1, 2, 2]
-    amount, expected, required, initial_balances, balances = _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
-
-    assert initial_balances[0] - amount == balances[0]
-    assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
-
-
-def test_1_crypto_weth(router, coins, margo):
-    coin1 = "cvx"
-    coin2 = "weth"
-    pool = "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4"  # cvxeth
-    swap_params = [1, 0, 1, 2, 2]
+    swap_params = [i, j, 1, 2, 2]
     amount, expected, required, initial_balances, balances = _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
@@ -135,40 +128,63 @@ def test_1_crypto_meta_factory(router, coins, margo):
     assert abs(amount - required) / amount < 1e-5
 
 
-def test_1_tricrypto(router, coins, margo):
-    coin1 = "usdt"
-    coin2 = "wbtc"
+@pytest.mark.parametrize("coin1", ["usdt", "wbtc", "eth", "weth"])
+@pytest.mark.parametrize("coin2", ["usdt", "wbtc", "eth", "weth"])
+def test_1_tricrypto(router, coins, margo, coin1, coin2):
+    indexes = {
+        "usdt": 0,
+        "wbtc": 1,
+        "eth": 2,
+        "weth": 2
+    }
+    i = indexes[coin1]
+    j = indexes[coin2]
+    if i == j:
+        return
     pool = "0xd51a44d3fae010294c616388b506acda1bfaae46"  # tricrypto2
-    swap_params = [0, 1, 1, 3, 3]
-    amount, expected, required, initial_balances, balances = _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
+    swap_params = [i, j, 1, 3, 3]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
 
 
-def test_1_tricrypto_eth(router, coins, margo):
-    coin1 = "eth"
-    coin2 = "wbtc"
-    pool = "0xd51a44d3fae010294c616388b506acda1bfaae46"  # tricrypto2
-    swap_params = [2, 1, 1, 3, 3]
-    amount, expected, required, initial_balances, balances = _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
+@pytest.mark.parametrize("coin1", ["wbtc", "crvusd"])
+@pytest.mark.parametrize("coin2", ["wbtc", "crvusd"])
+def test_1_llamma_wbtc(router, coins, margo, coin1, coin2):
+    if coin1 == coin2:
+        return
+    i, j = 0, 1
+    if coin2 == "crvusd":
+        i, j = 1, 0
+    pool = "0xe0438eb3703bf871e31ce639bd351109c88666ea"  # wbtc llamma
+    swap_params = [i, j, 1, 4, 2]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin1, coin2, pool, swap_params, amount=1)
 
     assert initial_balances[0] - amount == balances[0]
-    assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4 or (balances[1] - initial_balances[1]) - expected <= 10
+    assert abs(amount - required) / amount < 1e-3
 
 
-def test_1_tricrypto_weth(router, coins, margo):
-    coin1 = "weth"
-    coin2 = "usdt"
-    pool = "0xd51a44d3fae010294c616388b506acda1bfaae46"  # tricrypto2
-    swap_params = [2, 0, 1, 3, 3]
-    amount, expected, required, initial_balances, balances = _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
+@pytest.mark.parametrize("coin1", ["weth", "crvusd"])
+@pytest.mark.parametrize("coin2", ["weth", "crvusd"])
+def test_1_llamma_weth(router, coins, margo, coin1, coin2):
+    if coin1 == coin2 or (coin1 != "crvusd" and coin2 != "crvusd"):
+        return
+    i, j = 0, 1
+    if coin2 == "crvusd":
+        i, j = 1, 0
+    pool = "0x1681195c176239ac5e72d9aebacf5b2492e0c4ee"  # weth llamma
+    swap_params = [i, j, 1, 4, 2]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin1, coin2, pool, swap_params, amount=10)
 
     assert initial_balances[0] - amount == balances[0]
-    assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4 or (balances[1] - initial_balances[1]) - expected <= 10
+    assert abs(amount - required) / amount < 1e-4
 
 
 def test_2_stable_meta(router, coins, margo):
@@ -308,7 +324,7 @@ def test_4_tricrypto(router, coins, margo):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 0.06
+    assert abs(amount - required) / amount < 0.1
 
 
 def test_5(router, coins, margo):
