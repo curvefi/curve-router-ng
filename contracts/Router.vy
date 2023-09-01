@@ -609,7 +609,8 @@ def get_dx(
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
             else:  # crypto
                 if is_double_meta:  # swap is zap here
-                    amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, swap, second_base_pool, second_base_token)
+                    # base_token is base_pool_zap here
+                    amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, base_token, second_base_pool, second_base_token)
                 elif self.is_tricrypto_meta[pool]:
                     amount = CRYPTO_CALC.get_dx_tricrypto_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
                 else:
