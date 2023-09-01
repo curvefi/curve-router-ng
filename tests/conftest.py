@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import json
 import pytest
+from pathlib import Path
 from brownie import chain
 from brownie.project.main import get_loaded_projects
 
@@ -42,25 +43,22 @@ def pytest_sessionstart():
     # load `pooldata.json` for each pool
     project = get_loaded_projects()[0]
 
-    for network in ["ethereum"]:
+    for network in ["ethereum", "polygon"]:
         _COINDATA[network] = {}
         with project._path.joinpath(f"constants/{network}.json").open() as fp:
             _COINDATA[network] = json.load(fp)
 
-# def pytest_generate_tests(metafunc):
-#     network = metafunc.config.getoption("network")[0].split("-")[0]
-#     if network == "mainnet":
-#         network = "ethereum"
-#     try:
-#         params = metafunc.config.getoption("pools").split(",")
-#     except Exception:
-#         params = _POOLS[network]
-#
-#     for pool in params:
-#         if pool not in _POOLS[network]:
-#             raise ValueError(f"Invalid pool id: {pool}")
-#
-#     metafunc.parametrize("pool_data", params, indirect=True, scope="session")
+
+def pytest_ignore_collect(path, config):
+    project = get_loaded_projects()[0]
+    path = Path(path).relative_to(project._path)
+    test_file = path.parts[1]
+
+    network = config.getoption("network")[0].split("-")[0]
+    if network == "mainnet":
+        network = "ethereum"
+    if not test_file.startswith(f"test_{network}"):
+        return True
 
 
 @pytest.fixture(autouse=True)
