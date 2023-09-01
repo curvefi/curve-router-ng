@@ -126,38 +126,6 @@ def test_2_tricrypto(router, coins, margo, coin1, coin2):
     assert abs(amount - required) / amount < 1e-3
 
 
-@pytest.mark.parametrize("coin1", ["crv", "dai", "usdc", "usdt", "wbtc", "weth"])
-@pytest.mark.parametrize("coin2", ["crv", "dai", "usdc", "usdt", "wbtc", "weth"])
-def test_3_crypto(router, coins, margo, coin1, coin2):
-    indexes = {
-        "crv": 0,
-        "dai": 1,
-        "usdc": 2,
-        "usdt": 3,
-        "wbtc": 4,
-        "weth": 5,
-    }
-    i = indexes[coin1]
-    j = indexes[coin2]
-    if i == j:
-        return
-    pool = "0xc7c939a474cb10eb837894d1ed1a77c61b268fa7"  # crv/tricrypto
-    zap = "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
-    base_pool = "0x92215849c439E1f8612b6646060B4E3E5ef822cC"  # atricrypto3
-    base_pool_zap = "0x1d8b86e3D88cDb2d34688e87E72F388Cb541B7C8"  # atricrypto3 zap
-    second_base_pool = "0x445FE580eF8d70FF569aB36e80c647af338db351"  # aave
-    swap_params = [i, j, 3, 2, 6]
-    amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin1, coin2, pool, swap_params,
-                  zap=zap, base_pool=base_pool, base_token=base_pool_zap,
-                  second_base_pool=second_base_pool, second_base_token=coins["am3crv"],
-                  amount=1, test_slippage=False)
-
-    assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
-    assert abs(amount - required) / amount < 1e-2
-
-
 @pytest.mark.parametrize("coin1", ["mimatic", "dai", "usdc", "usdt"])
 @pytest.mark.parametrize("coin2", ["mimatic", "dai", "usdc", "usdt"])
 def test_3_stable_mai(router, coins, margo, coin1, coin2):
@@ -210,9 +178,41 @@ def test_3_stable_usdr(router, coins, margo, coin1, coin2):
     assert abs(amount - required) / amount < 1e-3
 
 
+@pytest.mark.parametrize("coin1", ["crv", "dai", "usdc", "usdt", "wbtc", "weth"])
+@pytest.mark.parametrize("coin2", ["crv", "dai", "usdc", "usdt", "wbtc", "weth"])
+def test_3_crypto_crv(router, coins, margo, coin1, coin2):
+    indexes = {
+        "crv": 0,
+        "dai": 1,
+        "usdc": 2,
+        "usdt": 3,
+        "wbtc": 4,
+        "weth": 5,
+    }
+    i = indexes[coin1]
+    j = indexes[coin2]
+    if i == j:
+        return
+    pool = "0xc7c939a474cb10eb837894d1ed1a77c61b268fa7"  # crv/tricrypto
+    zap = "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
+    base_pool = "0x92215849c439E1f8612b6646060B4E3E5ef822cC"  # atricrypto3
+    base_pool_zap = "0x1d8b86e3D88cDb2d34688e87E72F388Cb541B7C8"  # atricrypto3 zap
+    second_base_pool = "0x445FE580eF8d70FF569aB36e80c647af338db351"  # aave
+    swap_params = [i, j, 3, 2, 6]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin1, coin2, pool, swap_params,
+                  zap=zap, base_pool=base_pool, base_token=base_pool_zap,
+                  second_base_pool=second_base_pool, second_base_token=coins["am3crv"],
+                  amount=1, test_slippage=False)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
+    assert abs(amount - required) / amount < 1e-2
+
+
 @pytest.mark.parametrize("coin1", ["matic", "dai", "usdc", "usdt", "wbtc", "weth"])
 @pytest.mark.parametrize("coin2", ["matic", "dai", "usdc", "usdt", "wbtc", "weth"])
-def test_3_crypto(router, coins, margo, coin1, coin2):
+def test_3_crypto_matic(router, coins, margo, coin1, coin2):
     indexes = {
         "matic": 0,
         "dai": 1,
