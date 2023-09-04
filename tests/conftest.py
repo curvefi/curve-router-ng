@@ -43,7 +43,7 @@ def pytest_sessionstart():
     # load `pooldata.json` for each pool
     project = get_loaded_projects()[0]
 
-    for network in ["ethereum", "polygon", "arbitrum"]:
+    for network in ["ethereum", "polygon", "arbitrum", "avalanche"]:
         _COINDATA[network] = {}
         with project._path.joinpath(f"constants/{network}.json").open() as fp:
             _COINDATA[network] = json.load(fp)

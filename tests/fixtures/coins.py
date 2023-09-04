@@ -36,7 +36,7 @@ def amounts(coin_dict, network):
     _amounts = {}
     for coin_name in coin_dict.keys():
         _amounts[coin_name] = 1000 * 10**coin_dict[coin_name].get("decimals")
-        if coin_name in ["sbtc", "sbtc2_lp"]:
+        if coin_name in ["sbtc", "sbtc2_lp", "btc.b"]:
             _amounts[coin_name] = 200 * 10 ** coin_dict[coin_name].get("decimals")
 
     return _amounts
@@ -289,8 +289,8 @@ class _MintableTestTokenArbitrum(Contract):
                 USDT.approve(pool_address, 2 ** 256 - 1, {'from': target})
                 USDC.approve(pool_address, 2 ** 256 - 1, {'from': target})
 
-                pool_abi = getattr(interface, "CurveRenPool").abi
-                pool = Contract.from_abi("CurveRenPool", pool_address, pool_abi)
+                pool_abi = getattr(interface, "2pool").abi
+                pool = Contract.from_abi("2pool", pool_address, pool_abi)
                 pool.add_liquidity([amount // 2, amount // 2], 0, {'from': target})  # mint 2CRV
         else:
             raise ValueError("Unsupported Token")
@@ -321,9 +321,27 @@ class _MintableTestTokenAvalanche(Contract):
         elif hasattr(self, "mint") and hasattr(self, "owner"):  # renERC20
             self.mint(target, amount, {"from": self.owner()})
         elif hasattr(self, "mint") and hasattr(self, "minter"):  # Curve LP Token
-            self.mint(target, amount, {"from": self.minter()})
+            try:
+                self.mint(target, amount, {"from": self.minter()})
+            except Exception:  # 2crv
+                USDC = _MintableTestTokenAvalanche("0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e", "AvalancheERC20")
+                USDC._mint_for_testing(target, amount // 2 // 10**12)
+
+                USDT = _MintableTestTokenAvalanche("0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7", "AvalancheERC20")
+                USDT._mint_for_testing(target, amount // 2 // 10**12)
+
+                pool_address = self.address
+                USDT.approve(pool_address, 2 ** 256 - 1, {'from': target})
+                USDC.approve(pool_address, 2 ** 256 - 1, {'from': target})
+
+                pool_abi = getattr(interface, "2pool").abi
+                pool = Contract.from_abi("2pool", pool_address, pool_abi)
+                pool.add_liquidity([amount // 2 // 10**12, amount // 2 // 10**12], 0, {'from': target})  # mint 2CRV
         elif hasattr(self, "mint"):  # AvalancheERC20 (bridge token)
-            self.mint(target, amount, ZERO_ADDRESS, 0, 0x0, {"from": "0xEb1bB70123B2f43419d070d7fDE5618971cc2F8f"})
+            try:
+                self.mint(target, amount, ZERO_ADDRESS, 0, 0x0, {"from": "0xEb1bB70123B2f43419d070d7fDE5618971cc2F8f"})
+            except Exception:  # BTC.b
+                self.mint(target, amount, ZERO_ADDRESS, 0, 0x0, 0, {"from": "0xF5163f69F97B221d50347Dd79382F11c6401f1a1"})
         else:
             raise ValueError("Unsupported Token")
 

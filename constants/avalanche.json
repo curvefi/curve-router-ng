@@ -1,0 +1,81 @@
+{
+  "dai.e": {
+    "decimals": 18,
+    "address": "0xd586E7F844cEa2F87f50152665BCbc2C279D8d70",
+    "interface": "AvalancheERC20"
+  },
+  "usdc.e": {
+    "decimals": 6,
+    "address": "0xA7D7079b0FEaD91F3e65f86E8915Cb59c1a4C664",
+    "interface": "AvalancheERC20"
+  },
+  "usdt.e": {
+    "decimals": 6,
+    "address": "0xc7198437980c041c805A1EDcbA50c1Ce5db95118",
+    "interface": "AvalancheERC20"
+  },
+  "avdai": {
+    "decimals": 18,
+    "address": "0x47AFa96Cdc9fAb46904A55a6ad4bf6660B53c38a",
+    "interface": "AToken"
+  },
+  "avusdc": {
+    "decimals": 6,
+    "address": "0x46A51127C3ce23fb7AB1DE06226147F446e4a857",
+    "interface": "AToken"
+  },
+  "avusdt": {
+    "decimals": 6,
+    "address": "0x532E6537FEA298397212F09A61e03311686f548e",
+    "interface": "AToken"
+  },
+  "wbtc.e": {
+    "decimals": 8,
+    "address": "0x50b7545627a5162f82a992c33b87adc75187b218",
+    "interface": "AvalancheERC20"
+  },
+  "weth.e": {
+    "decimals": 18,
+    "address": "0x49d5c2bdffac6ce2bfdb6640f4f80f226bc10bab",
+    "interface": "AvalancheERC20"
+  },
+  "usdc": {
+    "decimals": 6,
+    "address": "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e",
+    "interface": "AvalancheERC20"
+  },
+  "usdt": {
+    "decimals": 6,
+    "address": "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7",
+    "interface": "AvalancheERC20"
+  },
+  "2crv": {
+    "decimals": 18,
+    "address": "0x0974D9d3bc463Fa17497aAFc3a87535553298FbE",
+    "interface": "CurveLpToken"
+  },
+  "btc.b": {
+    "decimals": 8,
+    "address": "0x152b9d0FdC40C096757F570A51E494bd4b943E50",
+    "interface": "AvalancheERC20"
+  },
+  "avax": {
+    "decimals": 18,
+    "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+  },
+  "wavax": {
+    "decimals": 18,
+    "address": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+    "interface": "WETH"
+  },
+  "nxusd": {
+    "decimals": 18,
+    "address": "0xf14f4ce569cb3679e99d5059909e23b07bd2f387",
+    "interface": "renERC20"
+  },
+  "av3crv": {
+    "decimals": 18,
+    "address": "0x1337bedc9d22ecbe766df105c9623922a27963ec",
+    "interface": "CurveLpToken"
+  }
+}
