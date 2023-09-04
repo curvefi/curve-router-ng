@@ -260,7 +260,7 @@ class _MintableTestTokenArbitrum(Contract):
 
     def _mint_for_testing(self, target, amount, kwargs=None):
         if self.address == self.wrapped:  # WETH
-            self.transfer(target, amount, {"from": "0x0c1cf6883efa1b496b01f654e247b9b419873054"})
+            self.transfer(target, amount, {"from": "0xba12222222228d8ba445958a75a0704d566bf2c8"})  # Balancer Vault
         elif hasattr(self, "l2Gateway"):  # ArbitrumERC20
             self.bridgeMint(target, amount, {"from": self.l2Gateway()})
         elif hasattr(self, "gatewayAddress"):  # ArbitrumUSDC
@@ -276,7 +276,22 @@ class _MintableTestTokenArbitrum(Contract):
         elif hasattr(self, "mint") and hasattr(self, "owner"):  # renERC20
             self.mint(target, amount, {"from": self.owner()})
         elif hasattr(self, "mint") and hasattr(self, "minter"):  # CurveLpTokenV5
-            self.mint(target, amount, {"from": self.minter()})
+            try:
+                self.mint(target, amount, {"from": self.minter()})
+            except Exception:  # 2crv
+                USDT = _MintableTestTokenArbitrum("0xfd086bc7cd5c481dcc9c85ebe478a1c0b69fcbb9", "ArbitrumERC20")
+                USDT._mint_for_testing(target, amount // 2)
+
+                USDC = _MintableTestTokenArbitrum("0xff970a61a04b1ca14834a43f5de4533ebddb5cc8", "ArbitrumUSDC")
+                USDC._mint_for_testing(target, amount // 2)
+
+                pool_address = "0x7f90122bf0700f9e7e1f688fe926940e8839f353"
+                USDT.approve(pool_address, 2 ** 256 - 1, {'from': target})
+                USDC.approve(pool_address, 2 ** 256 - 1, {'from': target})
+
+                pool_abi = getattr(interface, "CurveRenPool").abi
+                pool = Contract.from_abi("CurveRenPool", pool_address, pool_abi)
+                pool.add_liquidity([amount // 2, amount // 2], 0, {'from': target})  # mint 2CRV
         else:
             raise ValueError("Unsupported Token")
 
