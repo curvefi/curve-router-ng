@@ -1,0 +1,42 @@
+{
+  "wxdai": {
+    "decimals": 18,
+    "address": "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d",
+    "interface": "WETH"
+  },
+  "usdc": {
+    "decimals": 6,
+    "address": "0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83",
+    "interface": "renERC20"
+  },
+  "usdt": {
+    "decimals": 6,
+    "address": "0x4ECaBa5870353805a9F068101A40E0f32ed605C6",
+    "interface": "renERC20"
+  },
+  "x3crv": {
+    "decimals": 18,
+    "address": "0x1337BedC9D22ecbe766dF105c9623922A27963EC",
+    "interface": "CurveLpToken"
+  },
+  "eure": {
+    "decimals": 18,
+    "address": "0xcB444e90D8198415266c6a2724b7900fb12FC56E",
+    "interface": "renERC20"
+  },
+  "rai": {
+    "decimals": 18,
+    "address": "0xd7a28aa9c470e7e9d8c676bcd5dd2f40c5683afa",
+    "interface": "renERC20"
+  },
+  "wbtc": {
+    "decimals": 8,
+    "address": "0x8e5bbbb09ed1ebde8674cda39a0c169401db4252",
+    "interface": "renERC20"
+  },
+  "weth": {
+    "decimals": 18,
+    "address": "0x6a023ccd1ff6f2045c3309768ead9e68f978f6e1",
+    "interface": "renERC20"
+  }
+}

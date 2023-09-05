@@ -7,6 +7,11 @@ INIT_DATA = {
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
         "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
     },
+    "xdai": {
+        "tricrypto_meta_pools": ["0x5633E00994896D0F472926050eCb32E38bef3e65", ZERO_ADDRESS],
+        "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
+        "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
+    },
     "polygon": {
         "tricrypto_meta_pools": ["0x92215849c439E1f8612b6646060B4E3E5ef822cC", ZERO_ADDRESS],  # atricrypto3
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",

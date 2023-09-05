@@ -119,6 +119,7 @@ class _MintableTestTokenOptimism(Contract):
 
 class _MintableTestTokenXdai(Contract):
     wrapped = "0xe91D153E0b41518A2Ce8Dd3D7944Fa863463a97d".lower()
+    eure = "0xcB444e90D8198415266c6a2724b7900fb12FC56E".lower()
 
     def __init__(self, address, interface_name):
         abi = getattr(interface, interface_name).abi
@@ -129,6 +130,8 @@ class _MintableTestTokenXdai(Contract):
     def _mint_for_testing(self, target, amount, kwargs=None):
         if self.address.lower() == self.wrapped:  # WXDAI
             self.transfer(target, amount, {"from": "0xd4e420bBf00b0F409188b338c5D87Df761d6C894"})  # Agave interest bearing WXDAI (agWXDAI)
+        elif self.address.lower() == self.eure:  # EURe
+            self.transfer(target, amount, {"from": "0xba12222222228d8ba445958a75a0704d566bf2c8"})
         elif hasattr(self, "mint") and hasattr(self, "owner"):  # renERC20
             self.mint(target, amount, {"from": self.owner()})
         elif hasattr(self, "mint") and hasattr(self, "minter"):  # CurveLpTokenV5
