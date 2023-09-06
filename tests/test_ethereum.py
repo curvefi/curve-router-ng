@@ -496,6 +496,19 @@ def test_8_sfrxeth(router, coins, margo, coin1, coin2):
     assert abs(amount - required) / amount < 1e-15
 
 
+def test_8_wbeth(router, coins, margo):
+    coin1 = "eth"
+    coin2 = "wbeth"
+    pool = coins[coin2].address
+    swap_params = [0, 0, 8, 0, 0]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) <= 2
+    assert abs(amount - required) / amount < 1e-15
+
+
 @pytest.mark.parametrize("coin1", ["susd", "seur", "seth", "sbtc"])
 @pytest.mark.parametrize("coin2", ["susd", "seur", "seth", "sbtc"])
 def test_9(router, coins, margo, coin1, coin2):

@@ -119,5 +119,9 @@
   "crvusd": {
     "decimals": 18,
     "address": "0xf939E0A03FB07F59A73314E73794Be0E57ac1b4E"
+  },
+  "wbeth": {
+    "decimals": 18,
+    "address": "0xa2E3356610840701BDf5611a53974510Ae27E2e1"
   }
 }
