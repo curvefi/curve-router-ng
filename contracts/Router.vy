@@ -144,9 +144,10 @@ is_approved: HashMap[address, HashMap[address, bool]]
 is_tricrypto_meta: HashMap[address, bool]
 
 # SNX
+# https://github.com/Synthetixio/synthetix-docs/blob/master/content/addresses.md
 SNX_ADDRESS_RESOLVER: constant(address) = 0x823bE81bbF96BEc0e25CA13170F5AaCb5B79ba83
-SNX_TRACKING_CODE: constant(bytes32) = 0x4355525645000000000000000000000000000000000000000000000000000000
-SNX_EXCHANGE_RATES_NAME: constant(bytes32) = 0x45786368616E6765720000000000000000000000000000000000000000000000
+SNX_TRACKING_CODE: constant(bytes32) = 0x4355525645000000000000000000000000000000000000000000000000000000  # CURVE
+SNX_EXCHANGER_NAME: constant(bytes32) = 0x45786368616E6765720000000000000000000000000000000000000000000000  # Exchanger
 snx_currency_keys: HashMap[address, bytes32]
 
 # Calc zaps
@@ -506,8 +507,8 @@ def get_dy(
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
         elif params[2] == 9:
-            snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
-            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchange_rates).getAmountsForAtomicExchange(
+            snx_exchanger: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGER_NAME)
+            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchanger).getAmountsForAtomicExchange(
                 amount, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
             )
             amount = atomic_amount_and_fee.amountReceived
@@ -671,8 +672,8 @@ def get_dx(
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
         elif params[2] == 9:
-            snx_exchange_rates: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGE_RATES_NAME)
-            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchange_rates).getAmountsForAtomicExchange(
+            snx_exchanger: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGER_NAME)
+            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchanger).getAmountsForAtomicExchange(
                 10**18, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
             )
             amount = amount * 10**18 / atomic_amount_and_fee.amountReceived
