@@ -1,0 +1,46 @@
+{
+  "dai": {
+    "decimals": 18,
+    "address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
+    "interface": "OptimismBridgeToken"
+  },
+  "usdc": {
+    "decimals": 6,
+    "address": "0x7f5c764cbc14f9669b88837ca1490cca17c31607",
+    "interface": "OptimismBridgeToken"
+  },
+  "usdt": {
+    "decimals": 6,
+    "address": "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58",
+    "interface": "OptimismBridgeToken"
+  },
+  "eth": {
+    "decimals": 18,
+    "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+  },
+  "wsteth": {
+    "decimals": 18,
+    "address": "0x1f32b1c2345538c0c6f582fcb022739c4a194ebb",
+    "interface": "OptimismBridgeToken2"
+  },
+  "susd": {
+    "decimals": 18,
+    "address": "0x8c6f28f2f1a3c87f0f938b96d27520d9751ec8d9",
+    "interface": "ERC20"
+  },
+  "seur": {
+    "decimals": 18,
+    "address": "0xFBc4198702E81aE77c06D58f81b629BDf36f0a71",
+    "interface": "ERC20"
+  },
+  "seth": {
+    "decimals": 18,
+    "address": "0xe405de8f52ba7559f9df3c368500b6e6ae6cee49",
+    "interface": "ERC20"
+  },
+  "sbtc": {
+    "decimals": 18,
+    "address": "0x298b9b95708152ff6968aafd889c6586e9169f1d",
+    "interface": "ERC20"
+  }
+}

@@ -38,6 +38,8 @@ def amounts(coin_dict, network):
         _amounts[coin_name] = 1000 * 10**coin_dict[coin_name].get("decimals")
         if coin_name in ["sbtc", "sbtc2_lp", "btc.b"]:
             _amounts[coin_name] = 200 * 10 ** coin_dict[coin_name].get("decimals")
+        if network == "optimism" and coin_name in ["seth", "sbtc"]:
+            _amounts[coin_name] = 10 * 10 ** coin_dict[coin_name].get("decimals")
 
     return _amounts
 
@@ -96,6 +98,13 @@ class _MintableTestTokenEthereum(MintableForkToken):
 
 
 class _MintableTestTokenOptimism(Contract):
+    synthHolders = {
+        "0x8c6f28f2f1a3c87f0f938b96d27520d9751ec8d9".lower(): "0x061b87122ed14b9526a813209c8a59a633257bab",  # sUSD
+        "0xFBc4198702E81aE77c06D58f81b629BDf36f0a71".lower(): "0xA43818f61E30cfD0D5309A953E722c3da172Aec6",  # sEUR
+        "0xe405de8f52ba7559f9df3c368500b6e6ae6cee49".lower(): "0x7bc5728bc2b59b45a58d9a576e2ffc5f0505b35e",  # sETH
+        "0x298b9b95708152ff6968aafd889c6586e9169f1d".lower(): "0x9f2fe3500b1a7e285fdc337acace94c480e00130",  # sBTC
+    }
+
     def __init__(self, address, interface_name):
         abi = getattr(interface, interface_name).abi
         self.from_abi(interface_name, address, abi)
@@ -105,6 +114,8 @@ class _MintableTestTokenOptimism(Contract):
     def _mint_for_testing(self, target, amount, kwargs=None):
         if self.address.lower() == "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1".lower():  # DAI
             self.transfer(target, amount, {"from": "0x7b7b957c284c2c227c980d6e2f804311947b84d0"})
+        elif self.address.lower() in self.synthHolders:
+            self.transfer(target, amount, {"from": self.synthHolders[self.address.lower()]})
         elif hasattr(self, "l2Bridge"):  # OptimismBridgeToken
             self.mint(target, amount, {"from": self.l2Bridge()})
         elif hasattr(self, "bridge"):  # OptimismBridgeToken2
