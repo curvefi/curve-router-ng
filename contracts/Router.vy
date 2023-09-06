@@ -92,6 +92,10 @@ interface sfrxETH:
     def deposit(assets: uint256, receiver: address) -> uint256: nonpayable
     def redeem(shares: uint256, receiver: address, owner: address) -> uint256: nonpayable
 
+interface wBETH:
+    def deposit(referral: address): payable
+    def exchangeRate() -> uint256: view
+
 # SNX
 interface Synthetix:
     def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
@@ -137,6 +141,7 @@ STETH_ADDRESS: constant(address) = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
 WSTETH_ADDRESS: constant(address) = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0
 FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
 SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
+WBETH_ADDRESS: constant(address) = 0xa2E3356610840701BDf5611a53974510Ae27E2e1
 
 WETH_ADDRESS: immutable(address)
 
@@ -339,6 +344,8 @@ def exchange(
                 sfrxETH(swap).deposit(amount, self)
             elif input_token == SFRXETH_ADDRESS and output_token == FRXETH_ADDRESS:
                 sfrxETH(swap).redeem(amount, self, self)
+            elif input_token == ETH_ADDRESS and output_token == WBETH_ADDRESS:
+                wBETH(swap).deposit(0xeCb456EA5365865EbAb8a2661B0c503410e9B347, value=amount)
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
         elif params[2] == 9:
@@ -504,6 +511,8 @@ def get_dy(
                 amount = sfrxETH(swap).convertToAssets(amount)
             elif output_token == SFRXETH_ADDRESS:
                 amount = sfrxETH(swap).convertToShares(amount)
+            elif output_token == WBETH_ADDRESS:
+                amount = amount * 10**18 / wBETH(swap).exchangeRate()
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
         elif params[2] == 9:
@@ -669,6 +678,8 @@ def get_dx(
                 amount = sfrxETH(swap).convertToShares(amount)
             elif output_token == SFRXETH_ADDRESS:
                 amount = sfrxETH(swap).convertToAssets(amount)
+            elif output_token == WBETH_ADDRESS:
+                amount = amount * wBETH(swap).exchangeRate() / 10**18
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH or frxETH <-> sfrxETH"
         elif params[2] == 9:
