@@ -117,6 +117,8 @@ interface StableCalc:
 interface CryptoCalc:
     def get_dx(pool: address, i: uint256, j: uint256, dy: uint256, n_coins: uint256) -> uint256: view
     def get_dx_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, n_coins: uint256, base_pool: address, base_token: address) -> uint256: view
+    def get_dx_tricrypto_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, n_coins: uint256, base_pool: address, base_token: address) -> uint256: view
+    def get_dx_double_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, base_pool: address, base_pool_zap: address, base_pool2: address, base_token2: address) -> uint256: view
 
 
 struct AtomicAmountAndFee:
@@ -136,27 +138,14 @@ event ExchangeMultiple:
 
 
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
-STETH_ADDRESS: constant(address) = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
-WSTETH_ADDRESS: constant(address) = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0
-FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
-SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
-WBETH_ADDRESS: constant(address) = 0xa2E3356610840701BDf5611a53974510Ae27E2e1
-
 WETH_ADDRESS: immutable(address)
-
-is_approved: HashMap[address, HashMap[address, bool]]
-is_tricrypto_meta: HashMap[address, bool]
-
-# SNX
-# https://github.com/Synthetixio/synthetix-docs/blob/master/content/addresses.md
-SNX_ADDRESS_RESOLVER: constant(address) = 0x823bE81bbF96BEc0e25CA13170F5AaCb5B79ba83
-SNX_TRACKING_CODE: constant(bytes32) = 0x4355525645000000000000000000000000000000000000000000000000000000  # CURVE
-SNX_EXCHANGER_NAME: constant(bytes32) = 0x45786368616E6765720000000000000000000000000000000000000000000000  # Exchanger
-snx_currency_keys: HashMap[address, bytes32]
 
 # Calc zaps
 STABLE_CALC: immutable(StableCalc)
 CRYPTO_CALC: immutable(CryptoCalc)
+
+is_approved: HashMap[address, HashMap[address, bool]]
+is_tricrypto_meta: HashMap[address, bool]
 
 
 @external
@@ -167,14 +156,6 @@ def __default__():
 
 @external
 def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _tricrypto_meta_pools: address[2]):
-    self.snx_currency_keys[0x57Ab1ec28D129707052df4dF418D58a2D46d5f51] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
-    self.snx_currency_keys[0xD71eCFF9342A5Ced620049e616c5035F1dB98620] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
-    self.snx_currency_keys[0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
-    self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
-
-    self.is_approved[WSTETH_ADDRESS][WSTETH_ADDRESS] = True
-    self.is_approved[SFRXETH_ADDRESS][SFRXETH_ADDRESS] = True
-
     WETH_ADDRESS = _weth
     STABLE_CALC = StableCalc(_stable_calc)
     CRYPTO_CALC = CryptoCalc(_crypto_calc)
@@ -216,7 +197,6 @@ def exchange(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
-                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
@@ -328,24 +308,8 @@ def exchange(
                 WETH(swap).deposit(value=amount)
             elif input_token == WETH_ADDRESS and output_token == ETH_ADDRESS:
                 WETH(swap).withdraw(amount)
-            elif input_token == ETH_ADDRESS and output_token == STETH_ADDRESS:
-                stETH(swap).submit(0x0000000000000000000000000000000000000000, value=amount)
-            elif input_token == ETH_ADDRESS and output_token == FRXETH_ADDRESS:
-                frxETHMinter(swap).submit(value=amount)
-            elif input_token == STETH_ADDRESS and output_token == WSTETH_ADDRESS:
-                wstETH(swap).wrap(amount)
-            elif input_token == WSTETH_ADDRESS and output_token == STETH_ADDRESS:
-                wstETH(swap).unwrap(amount)
-            elif input_token == FRXETH_ADDRESS and output_token == SFRXETH_ADDRESS:
-                sfrxETH(swap).deposit(amount, self)
-            elif input_token == SFRXETH_ADDRESS and output_token == FRXETH_ADDRESS:
-                sfrxETH(swap).redeem(amount, self, self)
-            elif input_token == ETH_ADDRESS and output_token == WBETH_ADDRESS:
-                wBETH(swap).deposit(0xeCb456EA5365865EbAb8a2661B0c503410e9B347, value=amount)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
-        elif params[2] == 9:
-            Synthetix(swap).exchangeAtomically(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], SNX_TRACKING_CODE, 0)
+                raise "Swap type 8 is only for ETH <-> WETH"
         else:
             raise "Bad swap type"
 
@@ -417,7 +381,6 @@ def get_dy(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
-                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
@@ -489,31 +452,11 @@ def get_dy(
             else:  # crypto
                 amount = CryptoPool(swap).calc_withdraw_one_coin(amount, params[1])
         elif params[2] == 8:
-            if input_token == WETH_ADDRESS or output_token == WETH_ADDRESS or \
-                    (input_token == ETH_ADDRESS and output_token == STETH_ADDRESS) or \
-                    (input_token == ETH_ADDRESS and output_token == FRXETH_ADDRESS):
+            if input_token == WETH_ADDRESS or output_token == WETH_ADDRESS:
                 # ETH <--> WETH rate is 1:1
-                # ETH ---> stETH rate is 1:1
-                # ETH ---> frxETH rate is 1:1
                 pass
-            elif input_token == WSTETH_ADDRESS:
-                amount = wstETH(swap).getStETHByWstETH(amount)
-            elif output_token == WSTETH_ADDRESS:
-                amount = wstETH(swap).getWstETHByStETH(amount)
-            elif input_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
-            elif output_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToShares(amount)
-            elif output_token == WBETH_ADDRESS:
-                amount = amount * 10**18 / wBETH(swap).exchangeRate()
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
-        elif params[2] == 9:
-            snx_exchanger: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGER_NAME)
-            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchanger).getAmountsForAtomicExchange(
-                amount, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
-            )
-            amount = atomic_amount_and_fee.amountReceived
+                raise "Swap type 8 is only for ETH <-> WETH"
         else:
             raise "Bad swap type"
 
@@ -532,9 +475,11 @@ def get_dx(
     _route: address[9],
     _swap_params: uint256[5][4],
     _out_amount: uint256,
-    _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _pools: address[4],
     _base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
     _base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _second_base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _second_base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
 ) -> uint256:
     """
     @notice Calculate the input amount required to receive the desired output amount
@@ -557,7 +502,6 @@ def get_dx(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
-                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
@@ -565,6 +509,8 @@ def get_dx(
     @param _pools Array of pools.
     @param _base_pools Array of base pools (for meta pools).
     @param _base_tokens Array of base lp tokens (for meta pools). Should be a zap address for double meta pools.
+    @param _second_base_pools Array of the second base pools (for double meta pools like crv/tricrypto and wmatic/tricrypto).
+    @param _second_base_tokens Array of the second base lp tokens (for double meta pools  like crv/tricrypto and wmatic/tricrypto).
     @return Required amount of input token to send.
     """
     input_token: address = _route[0]
@@ -606,7 +552,12 @@ def get_dx(
                 else:
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
             else:  # crypto
-                amount = CRYPTO_CALC.get_dx_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
+                if second_base_pool != ZERO_ADDRESS:  # double-meta, swap is zap here, base_token is base_pool_zap here
+                    amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, base_token, second_base_pool, second_base_token)
+                elif self.is_tricrypto_meta[pool]:
+                    amount = CRYPTO_CALC.get_dx_tricrypto_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
+                else:
+                    amount = CRYPTO_CALC.get_dx_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
         elif params[2] in [4, 5]:
             # The number of coins doesn't matter here.
             # This is not correct. Should be something like calc_add_one_coin. But tests say that it's precise enough.
@@ -645,31 +596,11 @@ def get_dx(
                 else:  # stable or tricrypto
                     amount = StablePool5Coins(swap).calc_token_amount(_amounts, False)
         elif params[2] == 8:
-            if input_token == WETH_ADDRESS or output_token == WETH_ADDRESS or \
-                    (input_token == ETH_ADDRESS and output_token == STETH_ADDRESS) or \
-                    (input_token == ETH_ADDRESS and output_token == FRXETH_ADDRESS):
+            if input_token == WETH_ADDRESS or output_token == WETH_ADDRESS:
                 # ETH <--> WETH rate is 1:1
-                # ETH ---> stETH rate is 1:1
-                # ETH ---> frxETH rate is 1:1
                 pass
-            elif input_token == WSTETH_ADDRESS:
-                amount = wstETH(swap).getWstETHByStETH(amount)
-            elif output_token == WSTETH_ADDRESS:
-                amount = wstETH(swap).getStETHByWstETH(amount)
-            elif input_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToShares(amount)
-            elif output_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
-            elif output_token == WBETH_ADDRESS:
-                amount = amount * wBETH(swap).exchangeRate() / 10**18
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
-        elif params[2] == 9:
-            snx_exchanger: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGER_NAME)
-            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchanger).getAmountsForAtomicExchange(
-                10**18, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
-            )
-            amount = amount * 10**18 / atomic_amount_and_fee.amountReceived
+                raise "Swap type 8 is only for ETH <-> WETH"
         else:
             raise "Bad swap type"
 

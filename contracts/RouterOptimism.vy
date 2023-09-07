@@ -98,8 +98,6 @@ interface StableCalc:
 interface CryptoCalc:
     def get_dx(pool: address, i: uint256, j: uint256, dy: uint256, n_coins: uint256) -> uint256: view
     def get_dx_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, n_coins: uint256, base_pool: address, base_token: address) -> uint256: view
-    def get_dx_tricrypto_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, n_coins: uint256, base_pool: address, base_token: address) -> uint256: view
-    def get_dx_double_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, base_pool: address, base_pool_zap: address, base_pool2: address, base_token2: address) -> uint256: view
 
 
 struct AmountAndFee:
@@ -117,9 +115,9 @@ event ExchangeMultiple:
     amount_sold: uint256
     amount_bought: uint256
 
+
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 WETH_ADDRESS: immutable(address)
-is_approved: HashMap[address, HashMap[address, bool]]
 
 # SNX
 # https://github.com/Synthetixio/synthetix-docs/blob/master/content/addresses.md
@@ -131,6 +129,8 @@ snx_currency_keys: HashMap[address, bytes32]
 # Calc zaps
 STABLE_CALC: immutable(StableCalc)
 CRYPTO_CALC: immutable(CryptoCalc)
+
+is_approved: HashMap[address, HashMap[address, bool]]
 
 
 @external
@@ -160,7 +160,7 @@ def exchange(
     _receiver: address=msg.sender
 ) -> uint256:
     """
-    @notice Perform up to 4 swaps in a single transaction
+    @notice Performs up to 4 swaps in a single transaction.
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
     @param _route Array of [initial token, pool or zap, token, pool or zap, token, ...]
