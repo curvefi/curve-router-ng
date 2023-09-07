@@ -315,7 +315,7 @@ def exchange(
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
 
-    # validate the final amount received
+    amount -= 1  # Change non-zero -> non-zero costs less gas than zero -> non-zero
     assert amount >= _expected, "Slippage"
 
     # transfer the final token to the receiver
@@ -461,7 +461,7 @@ def get_dy(
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
 
-    return amount
+    return amount - 1
 
 
 @view
