@@ -160,10 +160,10 @@ def exchange(
     _receiver: address=msg.sender
 ) -> uint256:
     """
-    @notice Perform up to four swaps in a single transaction
+    @notice Perform up to 4 swaps in a single transaction
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
-    @param _route Array of [initial token, pool, token, pool, token, ...]
+    @param _route Array of [initial token, pool or zap, token, pool or zap, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
     @param _swap_params Multidimensional array of [i, j, swap type, pool_type, n_coins] where
@@ -171,27 +171,25 @@ def exchange(
                         j is the index of output token
 
                         The swap_type should be:
-                        1 for a stableswap `exchange`,
-                        2 for stableswap `exchange_underlying`,
-                        3 for a cryptoswap `exchange`,
-                        4 for a cryptoswap `exchange_underlying`,
-                        5 for factory metapools with lending base pool `exchange_underlying`,
-                        6 for factory crypto-meta pools underlying exchange (`exchange` method in zap),
-                        7-11 for wrapped coin (underlying for lending pool) -> LP token "exchange" (actually `add_liquidity`),
-                        12-14 for LP token -> wrapped coin (underlying for lending or fake pool) "exchange" (actually `remove_liquidity_one_coin`)
-                        15 for WETH <-> ETH "exchange" (actually deposit/withdraw)
-                        16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
-                        17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
-                        18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
+                        1. for `exchange`,
+                        2. for `exchange_underlying`,
+                        3. for underlying exchange via zap: factory stable metapools with lending base pool `exchange_underlying`
+                           and factory crypto-meta pools underlying exchange (`exchange` method in zap)
+                        4. for coin -> LP token "exchange" (actually `add_liquidity`),
+                        5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
+                        6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
+                        7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
+                        8. for ETH <-> WETH
+                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
-    @param _amount The amount of `_route[0]` token being sent.
+    @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _expected The minimum amount received after the final swap.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
                   Polygon meta-factories underlying swaps.
     @param _receiver Address to transfer the final output token to.
-    @return Received amount of the final output token
+    @return Received amount of the final output token.
     """
     input_token: address = _route[0]
     amount: uint256 = _amount
@@ -350,10 +348,10 @@ def get_dy(
     _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]
 ) -> uint256:
     """
-    @notice Get the current number the final output tokens received in an exchange
+    @notice Get amount of the final output token received in an exchange
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
-    @param _route Array of [initial token, pool, token, pool, token, ...]
+    @param _route Array of [initial token, pool or zap, token, pool or zap, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
     @param _swap_params Multidimensional array of [i, j, swap type, pool_type, n_coins] where
@@ -361,25 +359,23 @@ def get_dy(
                         j is the index of output token
 
                         The swap_type should be:
-                        1 for a stableswap `exchange`,
-                        2 for stableswap `exchange_underlying`,
-                        3 for a cryptoswap `exchange`,
-                        4 for a cryptoswap `exchange_underlying`,
-                        5 for factory metapools with lending base pool `exchange_underlying`,
-                        6 for factory crypto-meta pools underlying exchange (`exchange` method in zap),
-                        7-11 for wrapped coin (underlying for lending pool) -> LP token "exchange" (actually `add_liquidity`),
-                        12-14 for LP token -> wrapped coin (underlying for lending or fake pool) "exchange" (actually `remove_liquidity_one_coin`)
-                        15 for WETH <-> ETH "exchange" (actually deposit/withdraw)
-                        16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
-                        17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
-                        18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
+                        1. for `exchange`,
+                        2. for `exchange_underlying`,
+                        3. for underlying exchange via zap: factory stable metapools with lending base pool `exchange_underlying`
+                           and factory crypto-meta pools underlying exchange (`exchange` method in zap)
+                        4. for coin -> LP token "exchange" (actually `add_liquidity`),
+                        5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
+                        6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
+                        7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
+                        8. for ETH <-> WETH
+                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
-    @param _amount The amount of `_route[0]` token to be sent.
+    @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
                   Polygon meta-factories underlying swaps.
-    @return Expected amount of the final output token
+    @return Expected amount of the final output token.
     """
     input_token: address = _route[0]
     amount: uint256 = _amount
@@ -477,14 +473,12 @@ def get_dx(
     _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
     _base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
     _base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-    _second_base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-    _second_base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
 ) -> uint256:
     """
-    @notice Calculate the input amount required to receive the desired output amount
+    @notice Calculate the input amount required to receive the desired `_out_amount`
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
-    @param _route Array of [initial token, pool, token, pool, token, ...]
+    @param _route Array of [initial token, pool or zap, token, pool or zap, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
     @param _swap_params Multidimensional array of [i, j, swap type, pool_type, n_coins] where
@@ -492,25 +486,25 @@ def get_dx(
                         j is the index of output token
 
                         The swap_type should be:
-                        1 for a stableswap `exchange`,
-                        2 for stableswap `exchange_underlying`,
-                        3 for a cryptoswap `exchange`,
-                        4 for a cryptoswap `exchange_underlying`,
-                        5 for factory metapools with lending base pool `exchange_underlying`,
-                        6 for factory crypto-meta pools underlying exchange (`exchange` method in zap),
-                        7-11 for wrapped coin (underlying for lending pool) -> LP token "exchange" (actually `add_liquidity`),
-                        12-14 for LP token -> wrapped coin (underlying for lending or fake pool) "exchange" (actually `remove_liquidity_one_coin`)
-                        15 for WETH <-> ETH "exchange" (actually deposit/withdraw)
-                        16 for ETH -> stETH or ETH -> frxETH (actually submit). Ethereum network only
-                        17 for stETH <-> wstETH or frxETH <-> sfrxETH (actually wrap/unwrap and deposit/redeem). Ethereum network only
-                        18 for SNX exchangeAtomically (sUSD, sEUR, sETH, sBTC). Ethereum network only
+                        1. for `exchange`,
+                        2. for `exchange_underlying`,
+                        3. for underlying exchange via zap: factory stable metapools with lending base pool `exchange_underlying`
+                           and factory crypto-meta pools underlying exchange (`exchange` method in zap)
+                        4. for coin -> LP token "exchange" (actually `add_liquidity`),
+                        5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
+                        6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
+                        7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
+                        8. for ETH <-> WETH
+                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for
                   Polygon meta-factories underlying swaps.
-    @return Expected amount of the final output token
+    @param _base_pools Array of base pools (for meta pools).
+    @param _base_tokens Array of base lp tokens (for meta pools).
+    @return Required amount of input token to send.
     """
     input_token: address = _route[0]
     amount: uint256 = _out_amount
@@ -525,30 +519,24 @@ def get_dx(
         pool: address = _pools[i-1]
         base_pool: address = _base_pools[i-1]
         base_token: address = _base_tokens[i-1]
-        second_base_pool: address = _second_base_pools[i-1]
-        second_base_token: address = _second_base_tokens[i-1]
         output_token = _route[i * 2]
         params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, n_coins, pool_type
-        pool_type: uint256 = params[3]
         n_coins: uint256 = params[4]
-        is_meta: bool = base_pool != ZERO_ADDRESS
-        is_double_meta: bool = second_base_pool != ZERO_ADDRESS
-
 
         # Calc a required input amount according to the swap type
         if params[2] == 1:
-            if pool_type == 1:  # stable
-                if not is_meta:
+            if params[3] == 1:  # stable
+                if base_pool == ZERO_ADDRESS:  # non-meta
                     amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
-            elif pool_type in [2, 3]:  # crypto or tricrypto
+            elif params[3] in [2, 3]:  # crypto or tricrypto
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
             else:  # llamma
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
         elif params[2] in [2, 3]:
-            if pool_type == 1:  # stable
-                if not is_meta:
+            if params[3] == 1:  # stable
+                if base_pool == ZERO_ADDRESS:  # non-meta
                     amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
@@ -557,7 +545,7 @@ def get_dx(
         elif params[2] in [4, 5]:
             # The number of coins doesn't matter here.
             # This is not correct. Should be something like calc_add_one_coin. But tests say that it's precise enough.
-            if pool_type == 1:  # stable
+            if params[3] == 1:  # stable
                 amount = StablePool(swap).calc_withdraw_one_coin(amount, convert(params[0], int128))
             else:  # crypto
                 amount = CryptoPool(swap).calc_withdraw_one_coin(amount, params[0])
@@ -566,28 +554,28 @@ def get_dx(
             if n_coins == 2:
                 _amounts: uint256[2] = [0, 0]
                 _amounts[params[1]] = amount
-                if pool_type == 2:  # crypto
+                if params[3] == 2:  # crypto
                     amount = CryptoPool2Coins(swap).calc_token_amount(_amounts)  # This is not correct.
                 else:  # stable or tricrypto
                     amount = StablePool2Coins(swap).calc_token_amount(_amounts, False)
             elif n_coins == 3:
                 _amounts: uint256[3] = [0, 0, 0]
                 _amounts[params[1]] = amount
-                if pool_type == 2:  # crypto
+                if params[3] == 2:  # crypto
                     amount = CryptoPool3Coins(swap).calc_token_amount(_amounts)  # This is not correct.
                 else:  # stable or tricrypto
                     amount = StablePool3Coins(swap).calc_token_amount(_amounts, False)
             elif n_coins == 4:
                 _amounts: uint256[4] = [0, 0, 0, 0]
                 _amounts[params[1]] = amount
-                if pool_type == 2:  # crypto
+                if params[3] == 2:  # crypto
                     amount = CryptoPool4Coins(swap).calc_token_amount(_amounts)  # This is not correct.
                 else:  # stable or tricrypto
                     amount = StablePool4Coins(swap).calc_token_amount(_amounts, False)
             elif n_coins == 5:
                 _amounts: uint256[5] = [0, 0, 0, 0, 0]
                 _amounts[params[1]] = amount
-                if pool_type == 2:  # crypto
+                if params[3] == 2:  # crypto
                     amount = CryptoPool5Coins(swap).calc_token_amount(_amounts)  # This is not correct.
                 else:  # stable or tricrypto
                     amount = StablePool5Coins(swap).calc_token_amount(_amounts, False)
