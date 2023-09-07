@@ -127,14 +127,14 @@ struct AtomicAmountAndFee:
     exchangeFeeRate: uint256
 
 
-event ExchangeMultiple:
-    buyer: indexed(address)
+event Exchange:
+    sender: indexed(address)
     receiver: indexed(address)
     route: address[9]
     swap_params: uint256[5][4]
     pools: address[4]
-    amount_sold: uint256
-    amount_bought: uint256
+    in_amount: uint256
+    out_amount: uint256
 
 
 ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
@@ -347,7 +347,7 @@ def exchange(
         if len(response) != 0:
             assert convert(response, bool)
 
-    log ExchangeMultiple(msg.sender, _receiver, _route, _swap_params, _pools, _amount, amount)
+    log Exchange(msg.sender, _receiver, _route, _swap_params, _pools, _amount, amount)
 
     return amount
 
