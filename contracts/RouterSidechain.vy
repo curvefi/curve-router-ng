@@ -437,7 +437,7 @@ def get_dx(
     _route: address[9],
     _swap_params: uint256[5][4],
     _out_amount: uint256,
-    _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _pools: address[4],
     _base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
     _base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
 ) -> uint256:
