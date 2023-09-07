@@ -19,7 +19,7 @@ def test_1_stable(router, coins, margo, coin1, coin2):
     pool = "0x1337BedC9D22ecbe766dF105c9623922A27963EC"  # 3pool
     swap_params = [i, j, 1, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
@@ -40,7 +40,7 @@ def test_1_stable_eth(router, coins, margo, coin1, coin2):
     pool = "0xB90B9B1F91a01Ea22A182CD84C1E22222e39B415"  # wsteth
     swap_params = [i, j, 1, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin1, coin2, pool, swap_params)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
@@ -55,7 +55,7 @@ def test_9(router, coins, margo, coin1, coin2):
     pool = "0x8700dAec35aF8Ff88c16BdF0418774CB3D7599B4"  # SNX
     swap_params = [0, 0, 9, 0, 0]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin1, coin2, pool, swap_params, amount=1, test_slippage=False)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=1, test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
