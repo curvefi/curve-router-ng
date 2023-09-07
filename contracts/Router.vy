@@ -97,6 +97,9 @@ interface wBETH:
     def exchangeRate() -> uint256: view
 
 # SNX
+interface SnxCoin:
+    def currencyKey() -> bytes32: nonpayable
+
 interface Synthetix:
     def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
 
@@ -141,11 +144,8 @@ WSTETH_ADDRESS: constant(address) = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0
 FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
 SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
 WBETH_ADDRESS: constant(address) = 0xa2E3356610840701BDf5611a53974510Ae27E2e1
-
 WETH_ADDRESS: immutable(address)
 
-is_approved: HashMap[address, HashMap[address, bool]]
-is_tricrypto_meta: HashMap[address, bool]
 
 # SNX
 # https://github.com/Synthetixio/synthetix-docs/blob/master/content/addresses.md
@@ -158,6 +158,8 @@ snx_currency_keys: HashMap[address, bytes32]
 STABLE_CALC: immutable(StableCalc)
 CRYPTO_CALC: immutable(CryptoCalc)
 
+is_approved: HashMap[address, HashMap[address, bool]]
+
 
 @external
 @payable
@@ -166,12 +168,7 @@ def __default__():
 
 
 @external
-def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _tricrypto_meta_pools: address[2]):
-    self.snx_currency_keys[0x57Ab1ec28D129707052df4dF418D58a2D46d5f51] = 0x7355534400000000000000000000000000000000000000000000000000000000  # sUSD
-    self.snx_currency_keys[0xD71eCFF9342A5Ced620049e616c5035F1dB98620] = 0x7345555200000000000000000000000000000000000000000000000000000000  # sEUR
-    self.snx_currency_keys[0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb] = 0x7345544800000000000000000000000000000000000000000000000000000000  # sETH
-    self.snx_currency_keys[0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6] = 0x7342544300000000000000000000000000000000000000000000000000000000  # sBTC
-
+def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _snx_coins: address[4]):
     self.is_approved[WSTETH_ADDRESS][WSTETH_ADDRESS] = True
     self.is_approved[SFRXETH_ADDRESS][SFRXETH_ADDRESS] = True
 
@@ -179,10 +176,8 @@ def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _tri
     STABLE_CALC = StableCalc(_stable_calc)
     CRYPTO_CALC = CryptoCalc(_crypto_calc)
 
-    if _tricrypto_meta_pools[0] != ZERO_ADDRESS:
-        self.is_tricrypto_meta[_tricrypto_meta_pools[0]] = True
-    if _tricrypto_meta_pools[1] != ZERO_ADDRESS:
-        self.is_tricrypto_meta[_tricrypto_meta_pools[1]] = True
+    for _snx_coin in _snx_coins:
+        self.snx_currency_keys[_snx_coin] = SnxCoin(_snx_coin).currencyKey()
 
 
 @external
@@ -580,8 +575,6 @@ def get_dx(
         pool: address = _pools[i-1]
         base_pool: address = _base_pools[i-1]
         base_token: address = _base_tokens[i-1]
-        second_base_pool: address = _second_base_pools[i-1]
-        second_base_token: address = _second_base_tokens[i-1]
         output_token = _route[i * 2]
         params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, n_coins, pool_type
         pool_type: uint256 = params[3]
