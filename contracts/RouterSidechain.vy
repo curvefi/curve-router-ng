@@ -134,7 +134,7 @@ def exchange(
     _swap_params: uint256[5][5],
     _amount: uint256,
     _expected: uint256,
-    _pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _pools: address[5]=empty(address[5]),
     _receiver: address=msg.sender
 ) -> uint256:
     """
@@ -288,7 +288,7 @@ def get_dy(
     _route: address[11],
     _swap_params: uint256[5][5],
     _amount: uint256,
-    _pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]
+    _pools: address[5]=empty(address[5])
 ) -> uint256:
     """
     @notice Get amount of the final output token received in an exchange
@@ -414,8 +414,8 @@ def get_dx(
     _swap_params: uint256[5][5],
     _out_amount: uint256,
     _pools: address[5],
-    _base_pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-    _base_tokens: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _base_pools: address[5]=empty(address[5]),
+    _base_tokens: address[5]=empty(address[5]),
 ) -> uint256:
     """
     @notice Calculate the input amount required to receive the desired `_out_amount`
