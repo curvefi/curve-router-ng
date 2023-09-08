@@ -130,9 +130,9 @@ struct AtomicAmountAndFee:
 event Exchange:
     sender: indexed(address)
     receiver: indexed(address)
-    route: address[9]
-    swap_params: uint256[5][4]
-    pools: address[4]
+    route: address[11]
+    swap_params: uint256[5][5]
+    pools: address[5]
     in_amount: uint256
     out_amount: uint256
 
@@ -169,15 +169,15 @@ def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _tri
 @external
 @payable
 def exchange(
-    _route: address[9],
-    _swap_params: uint256[5][4],
+    _route: address[11],
+    _swap_params: uint256[5][5],
     _amount: uint256,
     _expected: uint256,
-    _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
     _receiver: address=msg.sender
 ) -> uint256:
     """
-    @notice Performs up to 4 swaps in a single transaction.
+    @notice Performs up to 5 swaps in a single transaction.
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
     @param _route Array of [initial token, pool or zap, token, pool or zap, token, ...]
@@ -228,8 +228,8 @@ def exchange(
         if len(response) != 0:
             assert convert(response, bool)
 
-    for i in range(1, 5):
-        # 4 rounds of iteration to perform up to 4 swaps
+    for i in range(1, 6):
+        # 5 rounds of iteration to perform up to 5 swaps
         swap: address = _route[i*2-1]
         pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 6)
         output_token = _route[i*2]
@@ -323,7 +323,7 @@ def exchange(
         assert amount != 0, "Received nothing"
 
         # check if this was the last swap
-        if i == 4 or _route[i*2+1] == ZERO_ADDRESS:
+        if i == 5 or _route[i*2+1] == ZERO_ADDRESS:
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -355,10 +355,10 @@ def exchange(
 @view
 @external
 def get_dy(
-    _route: address[9],
-    _swap_params: uint256[5][4],
+    _route: address[11],
+    _swap_params: uint256[5][5],
     _amount: uint256,
-    _pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]
+    _pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS]
 ) -> uint256:
     """
     @notice Get amount of the final output token received in an exchange
@@ -395,8 +395,8 @@ def get_dy(
     output_token: address = ZERO_ADDRESS
     amount: uint256 = _amount
 
-    for i in range(1, 5):
-        # 4 rounds of iteration to perform up to 4 swaps
+    for i in range(1, 6):
+        # 5 rounds of iteration to perform up to 5 swaps
         swap: address = _route[i*2-1]
         pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 4)
         output_token = _route[i * 2]
@@ -470,7 +470,7 @@ def get_dy(
             raise "Bad swap type"
 
         # check if this was the last swap
-        if i == 4 or _route[i*2+1] == ZERO_ADDRESS:
+        if i == 5 or _route[i*2+1] == ZERO_ADDRESS:
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -481,14 +481,14 @@ def get_dy(
 @view
 @external
 def get_dx(
-    _route: address[9],
-    _swap_params: uint256[5][4],
+    _route: address[11],
+    _swap_params: uint256[5][5],
     _out_amount: uint256,
-    _pools: address[4],
-    _base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-    _base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-    _second_base_pools: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
-    _second_base_tokens: address[4]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _pools: address[5],
+    _base_pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _base_tokens: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _second_base_pools: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
+    _second_base_tokens: address[5]=[ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS],
 ) -> uint256:
     """
     @notice Calculate the input amount required to receive the desired output amount
@@ -526,9 +526,9 @@ def get_dx(
     output_token: address = ZERO_ADDRESS
     amount: uint256 = _out_amount
 
-    for _i in range(1, 5):
-        # 4 rounds of iteration to perform up to 4 swaps
-        i: uint256 = 5 - _i
+    for _i in range(1, 6):
+        # 5 rounds of iteration to perform up to 5 swaps
+        i: uint256 = 6 - _i
         swap: address = _route[i*2-1]
         if swap == ZERO_ADDRESS:
             continue
@@ -578,7 +578,7 @@ def get_dx(
                 # POOL IS LP TOKEN HERE !!!
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[0]] = amount
-                amount = STABLE_CALC.calc_token_amount(swap, pool, amounts, params[4], False, True)
+                amount = STABLE_CALC.calc_token_amount(swap, pool, amounts, n_coins, False, True)
             else:
                 # Tricrypto pools have stablepool interface for calc_token_amount
                 if n_coins == 2:
