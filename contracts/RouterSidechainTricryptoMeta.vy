@@ -225,7 +225,7 @@ def exchange(
         output_token = _route[i*2]
         params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
 
-        if not self.is_approved[input_token][swap] and params[2] != 18:
+        if not self.is_approved[input_token][swap]:
             assert ERC20(input_token).approve(swap, max_value(uint256), default_return_value=True)
             self.is_approved[input_token][swap] = True
 

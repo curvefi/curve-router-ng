@@ -178,6 +178,7 @@ def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _snx
     CRYPTO_CALC = CryptoCalc(_crypto_calc)
 
     for _snx_coin in _snx_coins:
+        self.is_approved[_snx_coin][0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F] = True
         self.snx_currency_keys[_snx_coin] = SnxCoin(_snx_coin).currencyKey()
 
 
@@ -240,7 +241,7 @@ def exchange(
         output_token = _route[i*2]
         params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
 
-        if not self.is_approved[input_token][swap] and params[2] != 18:
+        if not self.is_approved[input_token][swap]:
             assert ERC20(input_token).approve(swap, max_value(uint256), default_return_value=True)
             self.is_approved[input_token][swap] = True
 
