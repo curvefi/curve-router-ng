@@ -1,9 +1,10 @@
 # @version 0.3.7
+
 """
-@title Curve Registry Exchange Contract
-@license MIT
+@title CurveRouterSidechainTricryptoMeta v1.0
 @author Curve.Fi
-@notice Find pools, query exchange rates and perform swaps
+@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
 """
 
 from vyper.interfaces import ERC20
@@ -388,7 +389,7 @@ def get_dy(
 
     @param _pools Array of pools for swaps via zap contracts. This parameter is needed for
                   1) swap_type = 3
-                  2) swap_type = 4 or 5. In this case `_pools` is an array of LP TOKENS
+                  2) swap_type = 4 or 5. In this case `_pools[i]` is  LP TOKEN
     @return Expected amount of the final output token.
     """
     input_token: address = _route[0]
@@ -515,7 +516,7 @@ def get_dx(
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
-    @param _pools Array of pools. When swap_type = 6 or 7, `_pools` is an array of LP TOKENS
+    @param _pools Array of pools. When swap_type = 6 or 7, `_pools[i]` is LP TOKEN
     @param _base_pools Array of base pools (for meta pools).
     @param _base_tokens Array of base lp tokens (for meta pools). Should be a zap address for double meta pools.
     @param _second_base_pools Array of the second base pools (for double meta pools like crv/tricrypto and wmatic/tricrypto).
