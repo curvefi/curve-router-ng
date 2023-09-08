@@ -525,7 +525,7 @@ def get_dx(
             if params[3] == 1: # stable
                 # POOL IS LP TOKEN HERE !!!
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                amounts[params[0]] = amount
+                amounts[params[1]] = amount
                 amount = STABLE_CALC.calc_token_amount(swap, pool, amounts, n_coins, False, True)
             else:
                 # Tricrypto pools have stablepool interface for calc_token_amount
