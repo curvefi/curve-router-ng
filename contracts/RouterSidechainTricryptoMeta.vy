@@ -216,18 +216,7 @@ def exchange(
         assert msg.value == amount
     else:
         assert msg.value == 0
-        response: Bytes[32] = raw_call(
-            input_token,
-            _abi_encode(
-                msg.sender,
-                self,
-                amount,
-                method_id=method_id("transferFrom(address,address,uint256)"),
-            ),
-            max_outsize=32,
-        )
-        if len(response) != 0:
-            assert convert(response, bool)
+        assert ERC20(input_token).transferFrom(msg.sender, self, amount, default_return_value=True)
 
     for i in range(1, 6):
         # 5 rounds of iteration to perform up to 5 swaps
@@ -237,18 +226,7 @@ def exchange(
         params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
 
         if not self.is_approved[input_token][swap] and params[2] != 18:
-            # approve the pool to transfer the input token
-            response: Bytes[32] = raw_call(
-                input_token,
-                _abi_encode(
-                    swap,
-                    MAX_UINT256,
-                    method_id=method_id("approve(address,uint256)"),
-                ),
-                max_outsize=32,
-            )
-            if len(response) != 0:  # For ETH
-                assert convert(response, bool)
+            assert ERC20(input_token).approve(swap, max_value(uint256), default_return_value=True)
             self.is_approved[input_token][swap] = True
 
         eth_amount: uint256 = 0
@@ -336,17 +314,7 @@ def exchange(
     if output_token == ETH_ADDRESS:
         raw_call(_receiver, b"", value=amount)
     else:
-        response: Bytes[32] = raw_call(
-            output_token,
-            _abi_encode(
-                _receiver,
-                amount,
-                method_id=method_id("transfer(address,uint256)"),
-            ),
-            max_outsize=32,
-        )
-        if len(response) != 0:
-            assert convert(response, bool)
+        assert ERC20(output_token).transfer(_receiver, amount, default_return_value=True)
 
     log Exchange(msg.sender, _receiver, _route, _swap_params, _pools, _amount, amount)
 
