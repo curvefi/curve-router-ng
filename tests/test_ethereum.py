@@ -1,5 +1,5 @@
 import pytest
-from utils import _exchange
+from utils import _exchange, _is_weekend
 
 pytestmark = pytest.mark.usefixtures("mint_margo", "approve_margo")
 
@@ -205,78 +205,78 @@ def test_3_crypto(router, coins, margo):
 
 
 def test_4_stable_2coins_fraxusdc(router, coins, margo):
-    coin1 = "frax"
-    coin2 = "fraxbp"
+    coin = "frax"
+    lp = "fraxbp"
     pool = "0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2"  # fraxusdc
     swap_params = [0, 0, 4, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-4
 
 
 def test_4_stable_2coins_fraxusdp(router, coins, margo):
-    coin1 = "usdp"
-    coin2 = "fraxusdp_lp"
+    coin = "usdp"
+    lp = "fraxusdp_lp"
     pool = "0xaE34574AC03A15cd58A92DC79De7B1A0800F1CE3"  # fraxusdp
     swap_params = [1, 0, 4, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-3
 
 
 def test_4_stable_2coins_sbtc2(router, coins, margo):
-    coin1 = "wbtc"
-    coin2 = "sbtc2_lp"
+    coin = "wbtc"
+    lp = "sbtc2_lp"
     pool = "0xf253f83AcA21aAbD2A20553AE0BF7F65C755A07F"  # sbtc2
     swap_params = [0, 0, 4, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params,
+                  amount=1, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
-    assert abs(amount - required) / amount < 1e-2
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-3
 
 
 def test_4_stable_3coins(router, coins, margo):
-    coin1 = "usdc"
-    coin2 = "3crv"
+    coin = "usdc"
+    lp = "3crv"
     pool = "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7"  # 3pool
     swap_params = [1, 0, 4, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-3
 
 
 def test_4_crypto(router, coins, margo):
-    coin1 = "cvx"
-    coin2 = "cvxeth_lp"
+    coin = "cvx"
+    lp = "cvxeth_lp"
     pool = "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4"  # cvxeth
     swap_params = [1, 0, 4, 2, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
     assert abs(amount - required) / amount < 1e-2
 
 
-
 def test_4_tricrypto(router, coins, margo):
-    coin1 = "wbtc"
-    coin2 = "tricrypto2_lp"
+    coin = "wbtc"
+    lp = "tricrypto2_lp"
     pool = "0xd51a44d3fae010294c616388b506acda1bfaae46"  # tricrypto2
     swap_params = [1, 0, 4, 3, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
@@ -284,77 +284,77 @@ def test_4_tricrypto(router, coins, margo):
 
 
 def test_5(router, coins, margo):
-    coin1 = "usdc"
-    coin2 = "aave_lp"
+    coin = "usdc"
+    lp = "aave_lp"
     pool = "0xdebf20617708857ebe4f679508e7b7863a8a8eee"  # aave
     swap_params = [1, 0, 5, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
     assert abs(amount - required) / amount < 1e-3
 
 
 def test_6_stable_2coins_fraxusdc(router, coins, margo):
-    coin1 = "fraxbp"
-    coin2 = "frax"
+    lp = "fraxbp"
+    coin = "frax"
     pool = "0xDcEF968d416a41Cdac0ED8702fAC8128A64241A2"  # fraxusdc
     swap_params = [0, 0, 6, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-7
 
 
 def test_6_stable_2coins_fraxusdp(router, coins, margo):
-    coin1 = "fraxusdp_lp"
-    coin2 = "usdp"
+    lp = "fraxusdp_lp"
+    coin = "usdp"
     pool = "0xaE34574AC03A15cd58A92DC79De7B1A0800F1CE3"  # fraxusdp
     swap_params = [0, 1, 6, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-7
 
 
 def test_6_stable_2coins_sbtc2(router, coins, margo):
-    coin1 = "sbtc2_lp"
-    coin2 = "wbtc"
+    lp = "sbtc2_lp"
+    coin = "wbtc"
     pool = "0xf253f83AcA21aAbD2A20553AE0BF7F65C755A07F"  # sbtc2
     swap_params = [0, 0, 6, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
-    assert abs(amount - required) / amount < 1e-3
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-7
 
 
 def test_6_stable_3coins(router, coins, margo):
-    coin1 = "3crv"
-    coin2 = "usdc"
+    lp = "3crv"
+    coin = "usdc"
     pool = "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7"  # 3pool
     swap_params = [0, 1, 6, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-7
 
 
 def test_6_crypto(router, coins, margo):
-    coin1 = "cvxeth_lp"
-    coin2 = "weth"
+    lp = "cvxeth_lp"
+    coin = "weth"
     pool = "0xb576491f1e6e5e62f1d8f26062ee822b40b0e0d4"  # cvxeth
     swap_params = [0, 0, 6, 2, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
@@ -362,12 +362,12 @@ def test_6_crypto(router, coins, margo):
 
 
 def test_6_tricrypto(router, coins, margo):
-    coin1 = "tricrypto2_lp"
-    coin2 = "weth"
+    lp = "tricrypto2_lp"
+    coin = "weth"
     pool = "0xd51a44d3fae010294c616388b506acda1bfaae46"  # tricrypto2
     swap_params = [0, 2, 6, 3, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
@@ -375,15 +375,15 @@ def test_6_tricrypto(router, coins, margo):
 
 
 def test_7(router, coins, margo):
-    coin1 = "aave_lp"
-    coin2 = "dai"
+    lp = "aave_lp"
+    coin = "dai"
     pool = "0xdebf20617708857ebe4f679508e7b7863a8a8eee"  # aave
     swap_params = [0, 0, 7, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
     assert abs(amount - required) / amount < 1e-3
 
 
@@ -474,7 +474,7 @@ def test_8_wbeth(router, coins, margo):
 @pytest.mark.parametrize("coin1", ["susd", "seur", "seth", "sbtc"])
 @pytest.mark.parametrize("coin2", ["susd", "seur", "seth", "sbtc"])
 def test_9(router, coins, margo, coin1, coin2):
-    if coin1 == coin2:
+    if coin1 == coin2 or (_is_weekend() and "seur" in [coin1, coin2]):
         return
     pool = "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F"  # SNX
     swap_params = [0, 0, 9, 0, 0]
@@ -528,6 +528,26 @@ def test_route_4_steps(router, coins, margo):
     swap_params = [[0, 2, 1, 1, 3], [0, 2, 1, 3, 3], [0, 1, 1, 1, 2], [0, 0, 8, 0, 0]]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, coin_names, pools, swap_params, test_slippage=False)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
+    assert abs(amount - required) / amount < 1e-5
+
+
+def test_route_5_steps(router, coins, margo):
+    coin_names = ["3crv", "dai", "usdt", "eth", "steth", "wsteth"]
+    pools = [
+        "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7",  # 3pool
+        "0xbebc44782c7db0a1a60cb6fe97d0b483032ff1c7",  # 3pool
+        "0xd51a44d3fae010294c616388b506acda1bfaae46",  # tricrypto2
+        "0xdc24316b9ae028f1497c275eb9192a3ea0f67022",  # steth
+        coins["wsteth"].address,
+    ]
+    swap_params = [[0, 0, 6, 1, 3], [0, 2, 1, 1, 3], [0, 2, 1, 3, 3], [0, 1, 1, 1, 2], [0, 0, 8, 0, 0]]
+    lp_tokens = [coins["3crv"].address]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin_names, pools, swap_params,
+                  lp_tokens=lp_tokens, test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
