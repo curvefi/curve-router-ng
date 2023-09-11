@@ -47,6 +47,21 @@ def test_1_stable_eth(router, coins, margo, coin1, coin2):
     assert abs(amount - required) / amount < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
 
 
+@pytest.mark.parametrize("coin1", ["eth", "weth"])
+@pytest.mark.parametrize("coin2", ["eth", "weth"])
+def test_8(router, coins, margo, coin1, coin2):
+    if coin1 == coin2:
+        return
+    pool = coins["weth"].address
+    swap_params = [0, 0, 8, 0, 0]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert balances[1] - initial_balances[1] == expected
+    assert abs(amount - required) / amount < 1e-15
+
+
 @pytest.mark.parametrize("coin1", ["susd", "seur", "seth", "sbtc"])
 @pytest.mark.parametrize("coin2", ["susd", "seur", "seth", "sbtc"])
 def test_9(router, coins, margo, coin1, coin2):
@@ -60,3 +75,18 @@ def test_9(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-9
+
+
+def test_route_2_steps(router, coins, margo):
+    coin_names = ["wsteth", "eth", "weth"]
+    pools = [
+        "0xB90B9B1F91a01Ea22A182CD84C1E22222e39B415",  # wsteth
+        coins["weth"].address,
+    ]
+    swap_params = [[1, 0, 1, 1, 2], [0, 0, 8, 0, 0]]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin_names, pools, swap_params, test_slippage=False)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert abs(amount - required) / amount < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
