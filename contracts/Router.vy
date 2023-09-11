@@ -273,23 +273,23 @@ def exchange(
             if params[4] == 2:
                 amounts: uint256[2] = [0, 0]
                 amounts[params[0]] = amount
-                StablePool2Coins(swap).add_liquidity(amounts, 0)
+                StablePool2Coins(swap).add_liquidity(amounts, 0, value=eth_amount)
             elif params[4] == 3:
                 amounts: uint256[3] = [0, 0, 0]
                 amounts[params[0]] = amount
-                StablePool3Coins(swap).add_liquidity(amounts, 0)
+                StablePool3Coins(swap).add_liquidity(amounts, 0, value=eth_amount)
             elif params[4] == 4:
                 amounts: uint256[4] = [0, 0, 0, 0]
                 amounts[params[0]] = amount
-                StablePool4Coins(swap).add_liquidity(amounts, 0)
+                StablePool4Coins(swap).add_liquidity(amounts, 0, value=eth_amount)
             elif params[4] == 5:
                 amounts: uint256[5] = [0, 0, 0, 0, 0]
                 amounts[params[0]] = amount
-                StablePool5Coins(swap).add_liquidity(amounts, 0)
+                StablePool5Coins(swap).add_liquidity(amounts, 0, value=eth_amount)
         elif params[2] == 5:
             amounts: uint256[3] = [0, 0, 0]
             amounts[params[0]] = amount
-            LendingStablePool3Coins(swap).add_liquidity(amounts, 0, True) # example: aave on Polygon
+            LendingStablePool3Coins(swap).add_liquidity(amounts, 0, True, value=eth_amount) # example: aave on Polygon
         elif params[2] == 6:
             if params[3] == 1:  # stable
                 StablePool(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
