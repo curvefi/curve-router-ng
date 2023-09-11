@@ -129,6 +129,7 @@ def __init__( _weth: address, _stable_calc: address, _crypto_calc: address):
 
 @external
 @payable
+@nonreentrant('lock')
 def exchange(
     _route: address[11],
     _swap_params: uint256[5][5],
