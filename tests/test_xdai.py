@@ -133,10 +133,11 @@ def test_4_stable(router, coins, margo, coin):
     pool = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"  # 3pool
     swap_params = [i, 0, 4, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin, lp], pool, swap_params, test_slippage=False)
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params,
+                  lp_tokens=[coins[lp].address], test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-3
 
 
@@ -152,11 +153,12 @@ def test_6_stable(router, coins, margo, coin):
     pool = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"  # 3pool
     swap_params = [0, j, 6, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [lp, coin], pool, swap_params, test_slippage=False)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params,
+                  lp_tokens=[coins[lp].address], test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
-    assert abs(amount - required) / amount < 1e-3
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
+    assert abs(amount - required) / amount < 1e-7
 
 
 def test_route_2_steps(router, coins, margo):
