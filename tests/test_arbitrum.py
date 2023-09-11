@@ -104,12 +104,10 @@ def test_2_crypto(router, coins, margo, coin1, coin2):
         return
     pool = "0xA827a652Ead76c6B0b3D19dba05452E06e25c27e"  # eursusd
     zap = "0x25e2e8d104BC1A70492e2BE32dA7c1f8367F9d2c"
-    base_pool = "0x7f90122bf0700f9e7e1f688fe926940e8839f353"  # 2pool
-    base_token = "0x7f90122bf0700f9e7e1f688fe926940e8839f353"
     swap_params = [i, j, 2, 2, 3]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params,
-                  zaps=zap, base_pools=base_pool, base_tokens=base_token)
+                  zaps=zap, base_pools=coins["2crv"].address, base_tokens=coins["2crv"].address)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
@@ -165,3 +163,23 @@ def test_route_4_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-4
+
+
+def test_route_5_steps(router, coins, margo):
+    coin_names = ["usdt", "2crv", "usdc", "usdt", "eth", "weth"]
+
+    pools = [
+        "0x7f90122bf0700f9e7e1f688fe926940e8839f353",  # 2pool
+        "0x7f90122bf0700f9e7e1f688fe926940e8839f353",  # 2pool
+        "0x7f90122bf0700f9e7e1f688fe926940e8839f353",  # 2pool
+        "0x960ea3e3C7FB317332d990873d354E18d7645590",  # tricrypto
+        coins["weth"].address
+    ]
+    lp_tokens = [coins["2crv"].address]
+    swap_params = [[1, 0, 4, 1, 2], [0, 0, 6, 1, 2], [0, 1, 1, 1, 2], [0, 2, 1, 2, 3], [0, 0, 8, 0, 0]]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin_names, pools, swap_params, lp_tokens=lp_tokens)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert balances[1] - initial_balances[1] == expected
+    assert abs(amount - required) / amount < 1e-3
