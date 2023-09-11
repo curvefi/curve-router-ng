@@ -37,35 +37,35 @@ interface CryptoMetaZap:
     def exchange(pool: address, i: uint256, j: uint256, dx: uint256, min_dy: uint256, use_eth: bool): payable
 
 interface StablePool2Coins:
-    def add_liquidity(amounts: uint256[2], min_mint_amount: uint256): nonpayable
+    def add_liquidity(amounts: uint256[2], min_mint_amount: uint256): payable
     def calc_token_amount(amounts: uint256[2], is_deposit: bool) -> uint256: view
 
 interface CryptoPool2Coins:
     def calc_token_amount(amounts: uint256[2]) -> uint256: view
 
 interface StablePool3Coins:
-    def add_liquidity(amounts: uint256[3], min_mint_amount: uint256): nonpayable
+    def add_liquidity(amounts: uint256[3], min_mint_amount: uint256): payable
     def calc_token_amount(amounts: uint256[3], is_deposit: bool) -> uint256: view
 
 interface CryptoPool3Coins:
     def calc_token_amount(amounts: uint256[3]) -> uint256: view
 
 interface StablePool4Coins:
-    def add_liquidity(amounts: uint256[4], min_mint_amount: uint256): nonpayable
+    def add_liquidity(amounts: uint256[4], min_mint_amount: uint256): payable
     def calc_token_amount(amounts: uint256[4], is_deposit: bool) -> uint256: view
 
 interface CryptoPool4Coins:
     def calc_token_amount(amounts: uint256[4]) -> uint256: view
 
 interface StablePool5Coins:
-    def add_liquidity(amounts: uint256[5], min_mint_amount: uint256): nonpayable
+    def add_liquidity(amounts: uint256[5], min_mint_amount: uint256): payable
     def calc_token_amount(amounts: uint256[5], is_deposit: bool) -> uint256: view
 
 interface CryptoPool5Coins:
     def calc_token_amount(amounts: uint256[5]) -> uint256: view
 
 interface LendingStablePool3Coins:
-    def add_liquidity(amounts: uint256[3], min_mint_amount: uint256, use_underlying: bool): nonpayable
+    def add_liquidity(amounts: uint256[3], min_mint_amount: uint256, use_underlying: bool): payable
     def remove_liquidity_one_coin(token_amount: uint256, i: int128, min_amount: uint256, use_underlying: bool) -> uint256: nonpayable
 
 interface Llamma:
@@ -535,8 +535,6 @@ def get_dx(
     @param _base_tokens Array of base lp tokens (for meta pools). Should be a zap address for double meta pools.
     @return Required amount of input token to send.
     """
-    input_token: address = _route[0]
-    output_token: address = ZERO_ADDRESS
     amount: uint256 = _out_amount
 
     for _i in range(1, 6):
@@ -545,10 +543,11 @@ def get_dx(
         swap: address = _route[i*2-1]
         if swap == ZERO_ADDRESS:
             continue
+        input_token: address = _route[(i - 1) * 2]
+        output_token: address = _route[i * 2]
         pool: address = _pools[i-1]
         base_pool: address = _base_pools[i-1]
         base_token: address = _base_tokens[i-1]
-        output_token = _route[i * 2]
         params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
         n_coins: uint256 = params[4]
 
@@ -641,8 +640,5 @@ def get_dx(
             amount = amount * 10**18 / atomic_amount_and_fee.amountReceived
         else:
             raise "Bad swap type"
-
-        # if there is another swap, the output token becomes the input for the next round
-        input_token = output_token
 
     return amount
