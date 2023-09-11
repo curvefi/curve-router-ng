@@ -98,6 +98,7 @@ class _MintableTestTokenEthereum(MintableForkToken):
 
 
 class _MintableTestTokenOptimism(Contract):
+    wrapped = "0x4200000000000000000000000000000000000006"
     synthHolders = {
         "0x8c6f28f2f1a3c87f0f938b96d27520d9751ec8d9".lower(): "0x061b87122ed14b9526a813209c8a59a633257bab",  # sUSD
         "0xFBc4198702E81aE77c06D58f81b629BDf36f0a71".lower(): "0xA43818f61E30cfD0D5309A953E722c3da172Aec6",  # sEUR
@@ -112,7 +113,9 @@ class _MintableTestTokenOptimism(Contract):
         super().__init__(address)
 
     def _mint_for_testing(self, target, amount, kwargs=None):
-        if self.address.lower() == "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1".lower():  # DAI
+        if self.address == self.wrapped:  # WETH
+            self.transfer(target, amount, {"from": "0xba12222222228d8ba445958a75a0704d566bf2c8"})  # Beethoven X: Vault
+        elif self.address.lower() == "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1".lower():  # DAI
             self.transfer(target, amount, {"from": "0x7b7b957c284c2c227c980d6e2f804311947b84d0"})
         elif self.address.lower() in self.synthHolders:
             self.transfer(target, amount, {"from": self.synthHolders[self.address.lower()]})
