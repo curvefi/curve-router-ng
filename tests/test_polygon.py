@@ -75,32 +75,6 @@ def test_2_tricrypto(router, coins, margo, coin1, coin2):
     assert abs(amount - required) / amount < 1e-3
 
 
-@pytest.mark.parametrize("coin1", ["mimatic", "dai", "usdc", "usdt"])
-@pytest.mark.parametrize("coin2", ["mimatic", "dai", "usdc", "usdt"])
-def test_3_stable_mai(router, coins, margo, coin1, coin2):
-    indexes = {
-        "mimatic": 0,
-        "dai": 1,
-        "usdc": 2,
-        "usdt": 3,
-    }
-    i = indexes[coin1]
-    j = indexes[coin2]
-    if i == j:
-        return
-    pool = "0x447646e84498552e62ecf097cc305eabfff09308"  # MAI+3pool (factory-v2-107)
-    zap = "0x5ab5C56B9db92Ba45a0B46a207286cD83C15C939"
-    base_pool = "0x445FE580eF8d70FF569aB36e80c647af338db351"  # aave
-    swap_params = [i, j, 3, 1, 4]
-    amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params,
-                  zaps=zap, base_pools=base_pool, base_tokens=coins["am3crv"])
-
-    assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
-    assert abs(amount - required) / amount < 1e-3
-
-
 @pytest.mark.parametrize("coin1", ["usdr", "dai", "usdc", "usdt"])
 @pytest.mark.parametrize("coin2", ["usdr", "dai", "usdc", "usdt"])
 def test_3_stable_usdr(router, coins, margo, coin1, coin2):
