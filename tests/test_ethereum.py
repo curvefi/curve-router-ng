@@ -500,6 +500,22 @@ def test_route_2_steps(router, coins, margo):
     assert abs(amount - required) / amount < 1e-5
 
 
+def test_route_2_steps_2(router, coins, margo):  # revert: NON_EMPTY_DATA
+    coin_names = ["eth", "steth", "wsteth"]
+    pools = [
+        coins["steth"].address,
+        coins["wsteth"].address,
+    ]
+    swap_params = [[0, 0, 8, 0, 0], [0, 0, 8, 0, 0]]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin_names, pools, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) <= 1
+    assert abs(amount - required) <= 2
+    assert coins["wsteth"].balanceOf(router) == 1
+
+
 def test_route_3_steps(router, coins, margo):
     coin_names = ["dai", "usdt", "eth", "wbeth"]
     pools = [
@@ -549,18 +565,3 @@ def test_route_5_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
     assert abs(amount - required) / amount < 1e-5
-
-
-# def test_route_2_steps_error(router, coins, margo):  # revert: NON_EMPTY_DATA
-#     coin_names = ["eth", "steth", "wsteth"]
-#     pools = [
-#         coins["steth"].address,
-#         coins["wsteth"].address,
-#     ]
-#     swap_params = [[0, 0, 8, 0, 0], [0, 0, 8, 0, 0]]
-#     amount, expected, required, initial_balances, balances = \
-#         _exchange(router, coins, margo, coin_names, pools, swap_params)
-#
-#     assert initial_balances[0] - amount == balances[0]
-#     assert abs((balances[1] - initial_balances[1]) - expected) <= 10
-#     assert abs(amount - required) / amount < 1e-5
