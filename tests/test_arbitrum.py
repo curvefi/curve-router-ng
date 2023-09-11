@@ -175,10 +175,9 @@ def test_route_5_steps(router, coins, margo):
         "0x960ea3e3C7FB317332d990873d354E18d7645590",  # tricrypto
         coins["weth"].address
     ]
-    lp_tokens = [coins["2crv"].address]
     swap_params = [[1, 0, 4, 1, 2], [0, 0, 6, 1, 2], [0, 1, 1, 1, 2], [0, 2, 1, 2, 3], [0, 0, 8, 0, 0]]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin_names, pools, swap_params, lp_tokens=lp_tokens)
+        _exchange(router, coins, margo, coin_names, pools, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected

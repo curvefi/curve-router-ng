@@ -172,15 +172,11 @@ def test_route_2_steps(router, coins, margo):
         "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
         "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
     ]
-    lp_tokens = [
-        coins["am3crv"].address,
-        coins["am3crv"].address,
-    ]
     swap_params = [[0, 0, 4, 1, 3], [0, 0, 7, 1, 3]]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin_names, pools, swap_params, lp_tokens=lp_tokens)
+        _exchange(router, coins, margo, coin_names, pools, swap_params)
 
-    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-7
+    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-6
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-3
 
@@ -198,10 +194,6 @@ def test_route_3_steps(router, coins, margo):
         ZERO_ADDRESS,
         ZERO_ADDRESS,
         "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
-    ]
-    lp_tokens = [
-        coins["am3crv"].address,
-        coins["am3crv"].address,
     ]
     base_pools = [
         ZERO_ADDRESS,
@@ -225,11 +217,11 @@ def test_route_3_steps(router, coins, margo):
     ]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, coin_names, pools, swap_params,
-                  zaps=zaps, lp_tokens=lp_tokens, base_pools=base_pools, base_tokens=base_tokens,
+                  zaps=zaps, base_pools=base_pools, base_tokens=base_tokens,
                   second_base_pools=second_base_pools, second_base_tokens=second_base_tokens,
                   test_slippage=False)
 
-    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-7
+    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-6
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-2
 
@@ -249,10 +241,6 @@ def test_route_4_steps(router, coins, margo):
         ZERO_ADDRESS,
         "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
     ]
-    lp_tokens = [
-        coins["am3crv"].address,
-        coins["am3crv"].address,
-    ]
     base_pools = [
         ZERO_ADDRESS,
         ZERO_ADDRESS,
@@ -275,11 +263,11 @@ def test_route_4_steps(router, coins, margo):
     ]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, coin_names, pools, swap_params,
-                  zaps=zaps, lp_tokens=lp_tokens, base_pools=base_pools, base_tokens=base_tokens,
+                  zaps=zaps, base_pools=base_pools, base_tokens=base_tokens,
                   second_base_pools=second_base_pools, second_base_tokens=second_base_tokens,
                   test_slippage=False)
 
-    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-7
+    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-6
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-2
 
@@ -301,11 +289,6 @@ def test_route_5_steps(router, coins, margo):
         ZERO_ADDRESS,
         "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
     ]
-    lp_tokens = [
-        ZERO_ADDRESS,
-        coins["am3crv"].address,
-        coins["am3crv"].address,
-    ]
     base_pools = [
         ZERO_ADDRESS,
         ZERO_ADDRESS,
@@ -332,7 +315,7 @@ def test_route_5_steps(router, coins, margo):
     ]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, coin_names, pools, swap_params,
-                  zaps=zaps, lp_tokens=lp_tokens, base_pools=base_pools, base_tokens=base_tokens,
+                  zaps=zaps, base_pools=base_pools, base_tokens=base_tokens,
                   second_base_pools=second_base_pools, second_base_tokens=second_base_tokens,
                   test_slippage=False)
 

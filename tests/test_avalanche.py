@@ -185,7 +185,7 @@ def test_4_stable(router, coins, margo, coin):
     pool = coins[lp]  # 2pool
     swap_params = [i, 0, 4, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin, lp], pool, swap_params, lp_tokens=[coins[lp].address])
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-15
@@ -204,7 +204,7 @@ def test_5_stable(router, coins, margo, coin):
     pool = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"  # aave
     swap_params = [i, 0, 5, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin, lp], pool, swap_params, lp_tokens=[coins[lp].address])
+        _exchange(router, coins, margo, [coin, lp], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
@@ -222,7 +222,7 @@ def test_6_stable(router, coins, margo, coin):
     pool = coins[lp]  # 2pool
     swap_params = [0, j, 6, 1, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-15
@@ -241,7 +241,7 @@ def test_7_stable(router, coins, margo, coin):
     pool = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"  # aave
     swap_params = [0, j, 7, 1, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [lp, coin], pool, swap_params, lp_tokens=[coins[lp].address])
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7

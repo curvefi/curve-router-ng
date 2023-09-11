@@ -204,7 +204,7 @@ def exchange(
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _expected The minimum amount received after the final swap.
-    @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for swap_type = 3
+    @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for swap_type = 3.
     @param _receiver Address to transfer the final output token to.
     @return Received amount of the final output token.
     """
@@ -275,13 +275,11 @@ def exchange(
             amounts[params[0]] = amount
             LendingStablePool3Coins(swap).add_liquidity(amounts, 0, True) # example: aave on Polygon
         elif params[2] == 6:
-            # The number of coins doesn't matter here
             if params[3] == 1:  # stable
                 StablePool(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
             else:  # crypto or tricrypto
                 CryptoPool(swap).remove_liquidity_one_coin(amount, params[1], 0)  # example: atricrypto3 on Polygon
         elif params[2] == 7:
-            # The number of coins doesn't matter here
             LendingStablePool3Coins(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0, True) # example: aave on Polygon
         elif params[2] == 8:
             if input_token == ETH_ADDRESS and output_token == WETH_ADDRESS:
@@ -355,10 +353,7 @@ def get_dy(
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
-
-    @param _pools Array of pools for swaps via zap contracts. This parameter is needed for
-                  1) swap_type = 3
-                  2) swap_type = 4 or 5. In this case `_pools[i]` is  LP TOKEN
+    @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for swap_type = 3.
     @return Expected amount of the final output token.
     """
     input_token: address = _route[0]
@@ -390,10 +385,9 @@ def get_dy(
                 amount = CryptoMetaZap(swap).get_dy(pool, params[0], params[1], amount)
         elif params[2] in [4, 5]:
             if params[3] == 1: # stable
-                # POOL IS LP TOKEN HERE !!!
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[0]] = amount
-                amount = STABLE_CALC.calc_token_amount(swap, pool, amounts, params[4], True, True)
+                amount = STABLE_CALC.calc_token_amount(swap, output_token, amounts, params[4], True, True)
             else:
                 # Tricrypto pools have stablepool interface for calc_token_amount
                 if params[4] == 2:
@@ -425,7 +419,6 @@ def get_dy(
                     else:  # tricrypto
                         amount = StablePool5Coins(swap).calc_token_amount(amounts, True)
         elif params[2] in [6, 7]:
-            # The number of coins doesn't matter here
             if params[3] == 1:  # stable
                 amount = StablePool(swap).calc_withdraw_one_coin(amount, convert(params[1], int128))
             else:  # crypto
@@ -485,7 +478,7 @@ def get_dx(
                         pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
-    @param _pools Array of pools. When swap_type = 6 or 7, `_pools[i]` is LP TOKEN
+    @param _pools Array of pools.
     @param _base_pools Array of base pools (for meta pools).
     @param _base_tokens Array of base lp tokens (for meta pools). Should be a zap address for double meta pools.
     @param _second_base_pools Array of the second base pools (for double meta pools like crv/tricrypto and wmatic/tricrypto).
@@ -523,32 +516,31 @@ def get_dx(
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
             else:  # llamma
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
-        elif params[2] in [2, 3]:
+        elif params[2] in [2, 3]:  # SWAP IS ZAP HERE !!!
             if params[3] == 1:  # stable
                 if base_pool == ZERO_ADDRESS:  # non-meta
                     amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
             else:  # crypto
-                if second_base_pool != ZERO_ADDRESS:  # double-meta, SWAP IS ZAP HERE !!!, base_token is base_pool_zap here
+                if second_base_pool != ZERO_ADDRESS:  # double-meta
+                    # BASE_TOKEN IS BASE_POOL_ZAP HERE !!!
                     amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, base_token, second_base_pool, second_base_token)
                 elif self.is_tricrypto_meta[pool]:
                     amount = CRYPTO_CALC.get_dx_tricrypto_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
                 else:
                     amount = CRYPTO_CALC.get_dx_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
         elif params[2] in [4, 5]:
-            # The number of coins doesn't matter here.
-            # This is not correct Should be something like calc_add_one_coin. But tests say that it's precise enough.
+            # This is not correct. Should be something like calc_add_one_coin. But tests say that it's precise enough.
             if params[3] == 1:  # stable
                 amount = StablePool(swap).calc_withdraw_one_coin(amount, convert(params[0], int128))
             else:  # crypto
                 amount = CryptoPool(swap).calc_withdraw_one_coin(amount, params[0])
         elif params[2] in [6, 7]:
             if params[3] == 1: # stable
-                # POOL IS LP TOKEN HERE !!!
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[1]] = amount
-                amount = STABLE_CALC.calc_token_amount(swap, pool, amounts, n_coins, False, True)
+                amount = STABLE_CALC.calc_token_amount(swap, input_token, amounts, n_coins, False, True)
             else:
                 # Tricrypto pools have stablepool interface for calc_token_amount
                 if n_coins == 2:
