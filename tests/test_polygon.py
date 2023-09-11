@@ -198,12 +198,16 @@ def test_route_2_steps(router, coins, margo):
         "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
         "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
     ]
+    lp_tokens = [
+        coins["am3crv"].address,
+        coins["am3crv"].address,
+    ]
     swap_params = [[0, 0, 4, 1, 3], [0, 0, 7, 1, 3]]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, coin_names, pools, swap_params)
+        _exchange(router, coins, margo, coin_names, pools, swap_params, lp_tokens=lp_tokens)
 
     assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-7
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-3
 
 
@@ -220,6 +224,10 @@ def test_route_3_steps(router, coins, margo):
         ZERO_ADDRESS,
         ZERO_ADDRESS,
         "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
+    ]
+    lp_tokens = [
+        coins["am3crv"].address,
+        coins["am3crv"].address,
     ]
     base_pools = [
         ZERO_ADDRESS,
@@ -243,12 +251,12 @@ def test_route_3_steps(router, coins, margo):
     ]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, coin_names, pools, swap_params,
-                  zaps=zaps, base_pools=base_pools, base_tokens=base_tokens,
+                  zaps=zaps, lp_tokens=lp_tokens, base_pools=base_pools, base_tokens=base_tokens,
                   second_base_pools=second_base_pools, second_base_tokens=second_base_tokens,
                   test_slippage=False)
 
     assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-7
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-2
 
 
@@ -267,6 +275,10 @@ def test_route_4_steps(router, coins, margo):
         ZERO_ADDRESS,
         "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
     ]
+    lp_tokens = [
+        coins["am3crv"].address,
+        coins["am3crv"].address,
+    ]
     base_pools = [
         ZERO_ADDRESS,
         ZERO_ADDRESS,
@@ -289,10 +301,67 @@ def test_route_4_steps(router, coins, margo):
     ]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, coin_names, pools, swap_params,
-                  zaps=zaps, base_pools=base_pools, base_tokens=base_tokens,
+                  zaps=zaps, lp_tokens=lp_tokens, base_pools=base_pools, base_tokens=base_tokens,
                   second_base_pools=second_base_pools, second_base_tokens=second_base_tokens,
                   test_slippage=False)
 
     assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-7
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert abs(amount - required) / amount < 1e-2
+
+
+def test_route_5_steps(router, coins, margo):
+    coin_names = ["amusdt", "amdai", "am3crv", "dai", "matic", "wmatic"]
+
+    pools = [
+        "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
+        "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
+        "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
+        "0x7bbc0e92505b485aeb3e82e828cb505daf1e50c6",  # wmatic/tricrypto
+        coins["wmatic"].address,
+    ]
+    swap_params = [[2, 0, 1, 1, 3], [0, 0, 4, 1, 3], [0, 0, 7, 1, 3], [1, 0, 3, 2, 6], [0, 0, 8, 0, 0]]
+    zaps = [
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        "0x3d8EADb739D1Ef95dd53D718e4810721837c69c1"  # atricrypto3 meta zap
+    ]
+    lp_tokens = [
+        ZERO_ADDRESS,
+        coins["am3crv"].address,
+        coins["am3crv"].address,
+    ]
+    base_pools = [
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        "0x92215849c439E1f8612b6646060B4E3E5ef822cC",  # atricrypto3
+    ]
+    base_tokens = [
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        "0x1d8b86e3D88cDb2d34688e87E72F388Cb541B7C8",  # atricrypto3 zap
+    ]
+    second_base_pools = [
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        "0x445FE580eF8d70FF569aB36e80c647af338db351",  # aave
+    ]
+    second_base_tokens = [
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        ZERO_ADDRESS,
+        coins["am3crv"],
+    ]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, coin_names, pools, swap_params,
+                  zaps=zaps, lp_tokens=lp_tokens, base_pools=base_pools, base_tokens=base_tokens,
+                  second_base_pools=second_base_pools, second_base_tokens=second_base_tokens,
+                  test_slippage=False)
+
+    assert abs((initial_balances[0] - amount) - balances[0]) / balances[0] < 1e-6
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-2
