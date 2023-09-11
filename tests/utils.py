@@ -1,8 +1,19 @@
+import datetime
 import brownie
 from brownie import ZERO_ADDRESS, ETH_ADDRESS, chain
 
-MAX_STEPS = 4
+
+MAX_STEPS = 5
 ROUTE_LENGTH = MAX_STEPS * 2 + 1
+
+
+def _is_weekend():
+    n = datetime.datetime.today().weekday()
+
+    if n < 5:
+        return False
+    else:  # 5 Sat, 6 Sun
+        return True
 
 
 def _format_route(route: list[str]) -> list[str]:
@@ -26,7 +37,7 @@ def _get_decimals(coin) -> int:
 
 
 def _exchange(router, coins, margo, coin_names, pools, _swap_params,
-              amount=None, zaps=None, base_pools=None, base_tokens=None, second_base_pools=None,
+              amount=None, zaps=None, lp_tokens=None, base_pools=None, base_tokens=None, second_base_pools=None,
               second_base_tokens=None, test_slippage=True):
     if type(pools) != list:
         pools = [pools]
@@ -34,6 +45,8 @@ def _exchange(router, coins, margo, coin_names, pools, _swap_params,
         _swap_params = [_swap_params]
     if type(zaps) != list:
         zaps = list(filter(lambda x: x is not None, [zaps]))
+    if type(lp_tokens) != list:
+        lp_tokens = list(filter(lambda x: x is not None, [lp_tokens]))
     if type(base_pools) != list:
         base_pools = list(filter(lambda x: x is not None, [base_pools]))
     if type(base_tokens) != list:
@@ -46,6 +59,7 @@ def _exchange(router, coins, margo, coin_names, pools, _swap_params,
     from_coin = coins[coin_names[0]]
     to_coin = coins[coin_names[-1]]
     zaps = _format_pools(zaps)
+    lp_tokens = _format_pools(lp_tokens)
 
     route = []
     for i in range(len(pools)):
@@ -57,6 +71,9 @@ def _exchange(router, coins, margo, coin_names, pools, _swap_params,
     route = _format_route(route)
     swap_params = _format_swap_params(_swap_params)
     pools = _format_pools(pools)
+    for i in range(len(pools)):
+        if lp_tokens[i] != ZERO_ADDRESS:
+            pools[i] = lp_tokens[i]  # for stablepools with swap_type = 4,5,6,7
     base_pools = _format_pools(base_pools)
     base_tokens = _format_pools(base_tokens)
     second_base_pools = _format_pools(second_base_pools)
