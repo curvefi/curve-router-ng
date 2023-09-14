@@ -194,7 +194,7 @@ def exchange(
     @return Received amount of the final output token.
     """
     input_token: address = _route[0]
-    output_token: address = ZERO_ADDRESS
+    output_token: address = empty(address)
     amount: uint256 = _amount
 
     # validate / transfer initial token
@@ -274,7 +274,7 @@ def exchange(
             else:
                 raise "Swap type 8 is only for ETH <-> WETH"
         elif params[2] == 9:
-            Synthetix(swap).exchangeWithTracking(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], ZERO_ADDRESS, SNX_TRACKING_CODE)
+            Synthetix(swap).exchangeWithTracking(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], empty(address), SNX_TRACKING_CODE)
         else:
             raise "Bad swap type"
 
@@ -288,7 +288,7 @@ def exchange(
         assert amount != 0, "Received nothing"
 
         # check if this was the last swap
-        if i == 5 or _route[i*2+1] == ZERO_ADDRESS:
+        if i == 5 or _route[i*2+1] == empty(address):
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -345,7 +345,7 @@ def get_dy(
     @return Expected amount of the final output token.
     """
     input_token: address = _route[0]
-    output_token: address = ZERO_ADDRESS
+    output_token: address = empty(address)
     amount: uint256 = _amount
 
     for i in range(1, 6):
@@ -427,7 +427,7 @@ def get_dy(
             raise "Bad swap type"
 
         # check if this was the last swap
-        if i == 5 or _route[i*2+1] == ZERO_ADDRESS:
+        if i == 5 or _route[i*2+1] == empty(address):
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -482,7 +482,7 @@ def get_dx(
         # 5 rounds of iteration to perform up to 5 swaps
         i: uint256 = 6 - _i
         swap: address = _route[i*2-1]
-        if swap == ZERO_ADDRESS:
+        if swap == empty(address):
             continue
         input_token: address = _route[(i - 1) * 2]
         output_token: address = _route[i * 2]
@@ -495,7 +495,7 @@ def get_dx(
         # Calc a required input amount according to the swap type
         if params[2] == 1:
             if params[3] == 1:  # stable
-                if base_pool == ZERO_ADDRESS:  # non-meta
+                if base_pool == empty(address):  # non-meta
                     amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
@@ -505,7 +505,7 @@ def get_dx(
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
         elif params[2] in [2, 3]:
             if params[3] == 1:  # stable
-                if base_pool == ZERO_ADDRESS:  # non-meta
+                if base_pool == empty(address):  # non-meta
                     amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)

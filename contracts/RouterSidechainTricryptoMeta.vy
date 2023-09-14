@@ -161,9 +161,9 @@ def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _tri
     STABLE_CALC = StableCalc(_stable_calc)
     CRYPTO_CALC = CryptoCalc(_crypto_calc)
 
-    if _tricrypto_meta_pools[0] != ZERO_ADDRESS:
+    if _tricrypto_meta_pools[0] != empty(address):
         self.is_tricrypto_meta[_tricrypto_meta_pools[0]] = True
-    if _tricrypto_meta_pools[1] != ZERO_ADDRESS:
+    if _tricrypto_meta_pools[1] != empty(address):
         self.is_tricrypto_meta[_tricrypto_meta_pools[1]] = True
 
 
@@ -209,7 +209,7 @@ def exchange(
     @return Received amount of the final output token.
     """
     input_token: address = _route[0]
-    output_token: address = ZERO_ADDRESS
+    output_token: address = empty(address)
     amount: uint256 = _amount
 
     # validate / transfer initial token
@@ -301,7 +301,7 @@ def exchange(
         assert amount != 0, "Received nothing"
 
         # check if this was the last swap
-        if i == 5 or _route[i*2+1] == ZERO_ADDRESS:
+        if i == 5 or _route[i*2+1] == empty(address):
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -357,7 +357,7 @@ def get_dy(
     @return Expected amount of the final output token.
     """
     input_token: address = _route[0]
-    output_token: address = ZERO_ADDRESS
+    output_token: address = empty(address)
     amount: uint256 = _amount
 
     for i in range(1, 6):
@@ -433,7 +433,7 @@ def get_dy(
             raise "Bad swap type"
 
         # check if this was the last swap
-        if i == 5 or _route[i*2+1] == ZERO_ADDRESS:
+        if i == 5 or _route[i*2+1] == empty(address):
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -491,7 +491,7 @@ def get_dx(
         # 5 rounds of iteration to perform up to 5 swaps
         i: uint256 = 6 - _i
         swap: address = _route[i*2-1]
-        if swap == ZERO_ADDRESS:
+        if swap == empty(address):
             continue
         input_token: address = _route[(i - 1) * 2]
         output_token: address = _route[i * 2]
@@ -507,7 +507,7 @@ def get_dx(
         # Calc a required input amount according to the swap type
         if params[2] == 1:
             if params[3] == 1:  # stable
-                if base_pool == ZERO_ADDRESS:  # non-meta
+                if base_pool == empty(address):  # non-meta
                     amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
@@ -517,12 +517,12 @@ def get_dx(
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
         elif params[2] in [2, 3]:  # SWAP IS ZAP HERE !!!
             if params[3] == 1:  # stable
-                if base_pool == ZERO_ADDRESS:  # non-meta
+                if base_pool == empty(address):  # non-meta
                     amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
             else:  # crypto
-                if second_base_pool != ZERO_ADDRESS:  # double-meta
+                if second_base_pool != empty(address):  # double-meta
                     # BASE_TOKEN IS BASE_POOL_ZAP HERE !!!
                     amount = CRYPTO_CALC.get_dx_double_meta_underlying(pool, params[0], params[1], amount, base_pool, base_token, second_base_pool, second_base_token)
                 elif self.is_tricrypto_meta[pool]:
