@@ -72,7 +72,7 @@ def _exchange(router, coins, margo, coin_names, pools, _swap_params,
     base_tokens = _format_pools(base_tokens)
     second_base_pools = _format_pools(second_base_pools)
     second_base_tokens = _format_pools(second_base_tokens)
-    amount = (amount or 100) * 10**_get_decimals(from_coin)
+    amount = int((amount or 100) * 10**_get_decimals(from_coin))
     value = amount if from_coin == ETH_ADDRESS else 0
 
     initial_balances = [_get_balance(from_coin, margo), _get_balance(to_coin, margo)]

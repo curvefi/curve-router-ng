@@ -53,7 +53,7 @@ def test_1_stable_meta(router, coins, margo, coin1, coin2):
 
 @pytest.mark.parametrize("coin1", ["eure", "x3crv"])
 @pytest.mark.parametrize("coin2", ["eure", "x3crv"])
-def test_1_crypto_meta(router, coins, margo, coin1, coin2):
+def test_1_crypto(router, coins, margo, coin1, coin2):
     indexes = {
         "eure": 0,
         "x3crv": 1,
@@ -66,6 +66,29 @@ def test_1_crypto_meta(router, coins, margo, coin1, coin2):
     swap_params = [i, j, 1, 2, 2]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert abs(amount - required) / amount < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert _get_balance(coins[coin2], router) == 1
+
+
+@pytest.mark.parametrize("coin1", ["x3crv", "wbtc", "weth"])
+@pytest.mark.parametrize("coin2", ["x3crv", "wbtc", "weth"])
+def test_1_tricrypto(router, coins, margo, coin1, coin2):
+    indexes = {
+        "x3crv": 0,
+        "wbtc": 0,
+        "weth": 0,
+    }
+    i = indexes[coin1]
+    j = indexes[coin2]
+    if i == j:
+        return
+    pool = "0x5633E00994896D0F472926050eCb32E38bef3e65"  # tricrypto
+    swap_params = [i, j, 1, 3, 3]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=1)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
@@ -123,6 +146,37 @@ def test_2_crypto_meta(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin2], router) == 1
+
+
+@pytest.mark.parametrize("coin1", ["wxdai", "usdc", "usdt", "wbtc", "weth"])
+@pytest.mark.parametrize("coin2", ["wxdai", "usdc", "usdt", "wbtc", "weth"])
+def test_2_tricrypto(router, coins, margo, coin1, coin2):
+    indexes = {
+        "wxdai": 0,
+        "usdc": 1,
+        "usdt": 2,
+        "wbtc": 3,
+        "weth": 4,
+    }
+    i = indexes[coin1]
+    j = indexes[coin2]
+    if i == j:
+        return
+    pool = "0x5633E00994896D0F472926050eCb32E38bef3e65"  # eureusd
+    base_pool = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"  # 3pool
+    zap = "0xF182926A64C0A19234E7E1FCDfE772aA7A1CA351"
+    swap_params = [i, j, 2, 3, 5]
+    amount = 1
+    if coin1 in ["wbtc", "weth"]:
+        amount = 0.0001
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params,
+                  zaps=zap, base_pools=base_pool, base_tokens=coins["x3crv"], amount=amount, test_slippage=False)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
+    assert abs(amount - required) / amount < 0.03 or amount - required < 10
     assert _get_balance(coins[coin2], router) == 1
 
 
