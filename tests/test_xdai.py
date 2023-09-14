@@ -1,5 +1,5 @@
 import pytest
-from utils import _exchange
+from utils import _exchange, _get_balance
 
 pytestmark = pytest.mark.usefixtures("mint_margo", "approve_margo")
 
@@ -24,6 +24,7 @@ def test_1_stable(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["rai", "x3crv"])
@@ -47,6 +48,7 @@ def test_1_stable_meta(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["eure", "x3crv"])
@@ -68,6 +70,7 @@ def test_1_crypto_meta(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
     assert abs(amount - required) / amount < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["rai", "wxdai", "usdc", "usdt"])
@@ -93,6 +96,7 @@ def test_2_stable_meta(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["eure", "wxdai", "usdc", "usdt"])
@@ -119,6 +123,7 @@ def test_2_crypto_meta(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-3
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin", ["wxdai", "usdc", "usdt"])
@@ -138,6 +143,7 @@ def test_4_stable(router, coins, margo, coin):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[lp], router) == 1
 
 
 @pytest.mark.parametrize("coin", ["wxdai", "usdc", "usdt"])
@@ -157,6 +163,7 @@ def test_6_stable(router, coins, margo, coin):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-7
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_route_2_steps(router, coins, margo):
@@ -185,3 +192,4 @@ def test_route_2_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin_names[-1]], router) == 1

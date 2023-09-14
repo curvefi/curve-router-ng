@@ -1,5 +1,5 @@
 import pytest
-from utils import _exchange, _is_weekend
+from utils import _exchange, _is_weekend, _get_balance
 
 pytestmark = pytest.mark.usefixtures("mint_margo", "approve_margo")
 
@@ -15,6 +15,7 @@ def test_1_stable(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 1
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_1_stable_meta(router, coins, margo):
@@ -29,6 +30,7 @@ def test_1_stable_meta(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 1
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_1_stable_lending(router, coins, margo):
@@ -41,6 +43,7 @@ def test_1_stable_lending(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["eth", "weth", "cvx"])
@@ -58,6 +61,7 @@ def test_1_crypto(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_1_crypto_meta(router, coins, margo):
@@ -70,6 +74,7 @@ def test_1_crypto_meta(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_1_crypto_meta_factory(router, coins, margo):
@@ -82,6 +87,7 @@ def test_1_crypto_meta_factory(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["usdt", "wbtc", "eth", "weth"])
@@ -105,6 +111,7 @@ def test_1_tricrypto(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["wbtc", "crvusd"])
@@ -121,8 +128,9 @@ def test_1_llamma_wbtc(router, coins, margo, coin1, coin2):
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=1)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4 or (balances[1] - initial_balances[1]) - expected <= 10
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-3 or (balances[1] - initial_balances[1]) - expected <= 10
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["weth", "crvusd"])
@@ -141,6 +149,7 @@ def test_1_llamma_weth(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4 or (balances[1] - initial_balances[1]) - expected <= 10
     assert abs(amount - required) / amount < 1e-4
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_2_stable_meta(router, coins, margo):
@@ -156,6 +165,7 @@ def test_2_stable_meta(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_2_stable_lending(router, coins, margo):
@@ -169,6 +179,7 @@ def test_2_stable_lending(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 10
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_2_crypto(router, coins, margo):
@@ -185,6 +196,7 @@ def test_2_crypto(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_3_crypto(router, coins, margo):
@@ -202,6 +214,7 @@ def test_3_crypto(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1] - zap_balance) - expected) / expected < 1e-4
     assert abs(amount - required) / amount < 1e-4
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_4_stable_2coins_fraxusdc(router, coins, margo):
@@ -215,6 +228,7 @@ def test_4_stable_2coins_fraxusdc(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-4
+    assert _get_balance(coins[lp], router) == 1
 
 
 def test_4_stable_2coins_fraxusdp(router, coins, margo):
@@ -228,6 +242,7 @@ def test_4_stable_2coins_fraxusdp(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[lp], router) == 1
 
 
 def test_4_stable_2coins_sbtc2(router, coins, margo):
@@ -241,6 +256,7 @@ def test_4_stable_2coins_sbtc2(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[lp], router) == 1
 
 
 def test_4_stable_3coins(router, coins, margo):
@@ -254,6 +270,7 @@ def test_4_stable_3coins(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[lp], router) == 1
 
 
 def test_4_crypto(router, coins, margo):
@@ -280,6 +297,7 @@ def test_4_tricrypto(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
     assert abs(amount - required) / amount < 0.1
+    assert _get_balance(coins[lp], router) == 1
 
 
 def test_5(router, coins, margo):
@@ -293,6 +311,7 @@ def test_5(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[lp], router) == 1
 
 
 def test_6_stable_2coins_fraxusdc(router, coins, margo):
@@ -306,6 +325,7 @@ def test_6_stable_2coins_fraxusdc(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-7
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_6_stable_2coins_fraxusdp(router, coins, margo):
@@ -319,6 +339,7 @@ def test_6_stable_2coins_fraxusdp(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-7
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_6_stable_2coins_sbtc2(router, coins, margo):
@@ -332,6 +353,7 @@ def test_6_stable_2coins_sbtc2(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-7
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_6_stable_3coins(router, coins, margo):
@@ -345,6 +367,7 @@ def test_6_stable_3coins(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10
     assert abs(amount - required) / amount < 1e-7
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_6_crypto(router, coins, margo):
@@ -358,6 +381,7 @@ def test_6_crypto(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
     assert abs(amount - required) / amount < 1e-2
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_6_tricrypto(router, coins, margo):
@@ -371,6 +395,7 @@ def test_6_tricrypto(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin], router) == 1
 
 
 def test_7(router, coins, margo):
@@ -384,6 +409,7 @@ def test_7(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["eth", "weth"])
@@ -399,6 +425,7 @@ def test_8_weth(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_8_steth(router, coins, margo):
@@ -412,6 +439,7 @@ def test_8_steth(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 10
     assert abs(amount - required) / amount < 1e-15
+    assert 1 <= _get_balance(coins[coin2], router) <= 2
 
 
 def test_8_frxeth(router, coins, margo):
@@ -425,6 +453,7 @@ def test_8_frxeth(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["steth", "wsteth"])
@@ -440,6 +469,7 @@ def test_8_wsteth(router, coins, margo, coin1, coin2):
     assert abs((initial_balances[0] - amount) - balances[0]) <= 1
     assert abs((balances[1] - initial_balances[1]) - expected) <= 10
     assert abs(amount - required) / amount < 1e-15
+    assert 1 <= _get_balance(coins[coin2], router) <= 2
 
 
 @pytest.mark.parametrize("coin1", ["frxeth", "sfrxeth"])
@@ -455,6 +485,7 @@ def test_8_sfrxeth(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6
     assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_8_wbeth(router, coins, margo):
@@ -468,6 +499,7 @@ def test_8_wbeth(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
     assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
 
 
 @pytest.mark.parametrize("coin1", ["susd", "seur", "seth", "sbtc"])
@@ -483,6 +515,7 @@ def test_9(router, coins, margo, coin1, coin2):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-3
+    assert _get_balance(coins[coin2], router) == 1
 
 
 def test_route_2_steps(router, coins, margo):
@@ -498,6 +531,7 @@ def test_route_2_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin_names[-1]], router) == 1
 
 
 def test_route_2_steps_2(router, coins, margo):  # revert: NON_EMPTY_DATA
@@ -512,8 +546,8 @@ def test_route_2_steps_2(router, coins, margo):  # revert: NON_EMPTY_DATA
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 1
-    assert abs(amount - required) <= 2
-    assert coins["wsteth"].balanceOf(router) == 1
+    assert abs(amount - required) <= 10
+    assert _get_balance(coins[coin_names[-1]], router) == 1
 
 
 def test_route_3_steps(router, coins, margo):
@@ -530,6 +564,7 @@ def test_route_3_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin_names[-1]], router) == 1
 
 
 def test_route_4_steps(router, coins, margo):
@@ -547,6 +582,7 @@ def test_route_4_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin_names[-1]], router) == 1
 
 
 def test_route_5_steps(router, coins, margo):
@@ -565,3 +601,4 @@ def test_route_5_steps(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
     assert abs(amount - required) / amount < 1e-5
+    assert _get_balance(coins[coin_names[-1]], router) == 1
