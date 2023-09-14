@@ -169,8 +169,8 @@ def exchange(
     @return Received amount of the final output token.
     """
     input_token: address = _route[0]
-    amount: uint256 = _amount
     output_token: address = ZERO_ADDRESS
+    amount: uint256 = _amount
 
     # validate / transfer initial token
     if input_token == ETH_ADDRESS:
@@ -317,8 +317,8 @@ def get_dy(
     @return Expected amount of the final output token.
     """
     input_token: address = _route[0]
-    amount: uint256 = _amount
     output_token: address = ZERO_ADDRESS
+    amount: uint256 = _amount
 
     for i in range(1, 6):
         # 5 rounds of iteration to perform up to 5 swaps
