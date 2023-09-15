@@ -163,7 +163,7 @@ def test_2_tricrypto(router, coins, margo, coin1, coin2):
     j = indexes[coin2]
     if i == j:
         return
-    pool = "0x5633E00994896D0F472926050eCb32E38bef3e65"  # eureusd
+    pool = "0x5633E00994896D0F472926050eCb32E38bef3e65"  # tricrypto
     base_pool = "0x7f90122BF0700F9E7e1F688fe926940E8839F353"  # 3pool
     zap = "0xF182926A64C0A19234E7E1FCDfE772aA7A1CA351"
     swap_params = [i, j, 2, 3, 5]

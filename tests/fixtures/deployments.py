@@ -24,7 +24,7 @@ INIT_DATA = {
         ]
     },
     "xdai": {
-        "tricrypto_meta_pools": ["0x5633E00994896D0F472926050eCb32E38bef3e65", ZERO_ADDRESS],
+        "tricrypto_meta_pools": ["0x5633E00994896D0F472926050eCb32E38bef3e65", ZERO_ADDRESS],  # tricrypto
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
         "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
     },
