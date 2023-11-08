@@ -54,7 +54,7 @@ INIT_DATA = {
     },
     "base": {
         "stable_calc": "0x5552b631e2aD801fAa129Aacf4B701071cC9D1f7",
-        "crypto_calc": '0xEfadDdE5B43917CcC738AdE6962295A0B343f7CE',
+        "crypto_calc": "0xEfadDdE5B43917CcC738AdE6962295A0B343f7CE",
     },
     "arbitrum": {
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
@@ -64,7 +64,11 @@ INIT_DATA = {
         "tricrypto_meta_pools": ["0xB755B949C126C04e0348DD881a5cF55d424742B2", "0x204f0620e7e7f07b780535711884835977679bba"],  # atricrypto, avaxcrypto
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
         "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
-    }
+    },
+    "bsc": {
+        "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
+        "crypto_calc": "0xd6681e74eea20d196c15038c580f721ef2ab6320",
+    },
 }
 
 WETH = {
@@ -79,6 +83,7 @@ WETH = {
     "base": "0x4200000000000000000000000000000000000006",
     "arbitrum": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
     "avalanche": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+    "bsc": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
 }
 
 
