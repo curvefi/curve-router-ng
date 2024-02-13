@@ -69,6 +69,10 @@ INIT_DATA = {
         "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
         "crypto_calc": "0xd6681e74eea20d196c15038c580f721ef2ab6320",
     },
+    "fraxtal": {
+        "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
+        "crypto_calc": "0x69522fb5337663d3B4dFB0030b881c1A750Adb4f",
+    },
 }
 
 WETH = {
@@ -84,6 +88,7 @@ WETH = {
     "arbitrum": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
     "avalanche": "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
     "bsc": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
+    "fraxtal": "0xFC00000000000000000000000000000000000006",
 }
 
 
