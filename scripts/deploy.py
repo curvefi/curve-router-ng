@@ -77,6 +77,10 @@ INIT_DATA = {
         "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
         "crypto_calc": "0x69522fb5337663d3B4dFB0030b881c1A750Adb4f",
     },
+    "mantle": {
+        "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
+        "crypto_calc": "0xd6681e74eEA20d196c15038C580f721EF2aB6320",
+    },
 }
 
 WETH = {
@@ -94,6 +98,7 @@ WETH = {
     "bsc": "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c",
     "fraxtal": "0xFC00000000000000000000000000000000000006",
     "xlayer": "0xe538905cf8410324e03a5a23c1c177a474d59b2b",  # WOKB
+    "mantle": "0x78c1b0C915c4FAA5FffA6CAbf0219DA63d7f4cb8",  # WMNT
 }
 
 
