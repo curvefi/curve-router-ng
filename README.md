@@ -12,3 +12,4 @@
 - BSC: [0x69522fb5337663d3B4dFB0030b881c1A750Adb4f](https://bscscan.com/address/0x69522fb5337663d3B4dFB0030b881c1A750Adb4f#code)
 - Fraxtal: [0x4f37A9d177470499A2dD084621020b023fcffc1F](https://fraxscan.com/address/0x4f37A9d177470499A2dD084621020b023fcffc1F#code)
 - X Layer: [0x4f37A9d177470499A2dD084621020b023fcffc1F](https://www.oklink.com/xlayer/address/0x4f37a9d177470499a2dd084621020b023fcffc1f/contract)
+- Mantle: [0x69522fb5337663d3B4dFB0030b881c1A750Adb4f](https://mantlescan.xyz/address/0x69522fb5337663d3b4dfb0030b881c1a750adb4f#code)
