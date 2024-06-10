@@ -160,7 +160,7 @@ def exchange(
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH
 
-                        pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
+                        pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _expected The minimum amount received after the final swap.
@@ -197,7 +197,7 @@ def exchange(
         if params[2] == 1:
             if params[3] == 1:  # stable
                 StablePool(swap).exchange(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
-            else:  # crypto, tricrypto or llamma
+            else:  # crypto or llamma
                 if input_token == ETH_ADDRESS or output_token == ETH_ADDRESS:
                     CryptoPoolETH(swap).exchange(params[0], params[1], amount, 0, True, value=eth_amount)
                 else:
@@ -205,12 +205,12 @@ def exchange(
         elif params[2] == 2:
             if params[3] == 1:  # stable
                 StablePool(swap).exchange_underlying(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
-            else:  # crypto or tricrypto
+            else:  # crypto
                 CryptoPool(swap).exchange_underlying(params[0], params[1], amount, 0, value=eth_amount)
         elif params[2] == 3:  # SWAP IS ZAP HERE !!!
             if params[3] == 1:  # stable
                 LendingBasePoolMetaZap(swap).exchange_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, 0)
-            else:  # crypto or tricrypto
+            else:  # crypto
                 use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
                 CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth, value=eth_amount)
         elif params[2] == 4:
@@ -237,7 +237,7 @@ def exchange(
         elif params[2] == 6:
             if params[3] == 1:  # stable
                 StablePool(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
-            else:  # crypto or tricrypto
+            else:  # crypto
                 CryptoPool(swap).remove_liquidity_one_coin(amount, params[1], 0)  # example: atricrypto3 on Polygon
         elif params[2] == 7:
             LendingStablePool3Coins(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0, True) # example: aave on Polygon
@@ -310,7 +310,7 @@ def get_dy(
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH
 
-                        pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
+                        pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _pools Array of pools for swaps via zap contracts. This parameter is needed only for swap_type = 3.
@@ -353,28 +353,28 @@ def get_dy(
                 if params[4] == 2:
                     amounts: uint256[2] = [0, 0]
                     amounts[params[0]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool2Coins(swap).calc_token_amount(amounts)
                     else:  # tricrypto
                         amount = StablePool2Coins(swap).calc_token_amount(amounts, True)
                 elif params[4] == 3:
                     amounts: uint256[3] = [0, 0, 0]
                     amounts[params[0]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool3Coins(swap).calc_token_amount(amounts)
                     else:  # tricrypto
                         amount = StablePool3Coins(swap).calc_token_amount(amounts, True)
                 elif params[4] == 4:
                     amounts: uint256[4] = [0, 0, 0, 0]
                     amounts[params[0]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool4Coins(swap).calc_token_amount(amounts)
                     else:  # tricrypto
                         amount = StablePool4Coins(swap).calc_token_amount(amounts, True)
                 elif params[4] == 5:
                     amounts: uint256[5] = [0, 0, 0, 0, 0]
                     amounts[params[0]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool5Coins(swap).calc_token_amount(amounts)
                     else:  # tricrypto
                         amount = StablePool5Coins(swap).calc_token_amount(amounts, True)
@@ -433,7 +433,7 @@ def get_dx(
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH
 
-                        pool_type: 1 - stable, 2 - crypto, 3 - tricrypto, 4 - llamma
+                        pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
     @param _pools Array of pools.
@@ -464,7 +464,7 @@ def get_dx(
                     amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
-            elif params[3] in [2, 3]:  # crypto or tricrypto
+            elif params[3] in [2, 3]:  # crypto
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
             else:  # llamma
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
@@ -492,28 +492,28 @@ def get_dx(
                 if n_coins == 2:
                     amounts: uint256[2] = [0, 0]
                     amounts[params[1]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool2Coins(swap).calc_token_amount(amounts)  # This is not correct
                     else:  # tricrypto
                         amount = StablePool2Coins(swap).calc_token_amount(amounts, False)
                 elif n_coins == 3:
                     amounts: uint256[3] = [0, 0, 0]
                     amounts[params[1]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool3Coins(swap).calc_token_amount(amounts)  # This is not correct
                     else:  # tricrypto
                         amount = StablePool3Coins(swap).calc_token_amount(amounts, False)
                 elif n_coins == 4:
                     amounts: uint256[4] = [0, 0, 0, 0]
                     amounts[params[1]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool4Coins(swap).calc_token_amount(amounts)  # This is not correct
                     else:  # tricrypto
                         amount = StablePool4Coins(swap).calc_token_amount(amounts, False)
                 elif n_coins == 5:
                     amounts: uint256[5] = [0, 0, 0, 0, 0]
                     amounts[params[1]] = amount
-                    if params[3] == 2:  # crypto
+                    if params[3] == 2:  # twocrypto
                         amount = CryptoPool5Coins(swap).calc_token_amount(amounts)  # This is not correct
                     else:  # tricrypto
                         amount = StablePool5Coins(swap).calc_token_amount(amounts, False)
