@@ -26,6 +26,10 @@ interface CryptoPool:
     def calc_withdraw_one_coin(token_amount: uint256, i: uint256) -> uint256: view
     def remove_liquidity_one_coin(token_amount: uint256, i: uint256, min_amount: uint256): nonpayable
 
+interface StableNgPool:
+    def get_dx(i: int128, j: int128, amount: uint256) -> uint256: view
+    def get_dx_underlying(i: int128, j: int128, amount: uint256) -> uint256: view
+
 interface CryptoPoolETH:
     def exchange(i: uint256, j: uint256, dx: uint256, min_dy: uint256, use_eth: bool): payable
 
@@ -201,6 +205,8 @@ def exchange(
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
+                                   10 - stable-ng
+
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _expected The minimum amount received after the final swap.
@@ -235,7 +241,7 @@ def exchange(
             eth_amount = amount
         # perform the swap according to the swap type
         if params[2] == 1:
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 StablePool(swap).exchange(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
             else:  # crypto or llamma
                 if input_token == ETH_ADDRESS or output_token == ETH_ADDRESS:
@@ -243,12 +249,12 @@ def exchange(
                 else:
                     CryptoPool(swap).exchange(params[0], params[1], amount, 0)
         elif params[2] == 2:
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 StablePool(swap).exchange_underlying(convert(params[0], int128), convert(params[1], int128), amount, 0, value=eth_amount)
             else:  # crypto
                 CryptoPool(swap).exchange_underlying(params[0], params[1], amount, 0, value=eth_amount)
         elif params[2] == 3:  # SWAP IS ZAP HERE !!!
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 LendingBasePoolMetaZap(swap).exchange_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, 0)
             else:  # crypto
                 use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
@@ -275,7 +281,7 @@ def exchange(
             amounts[params[0]] = amount
             LendingStablePool3Coins(swap).add_liquidity(amounts, 0, True, value=eth_amount) # example: aave on Polygon
         elif params[2] == 6:
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 StablePool(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
             else:  # crypto
                 CryptoPool(swap).remove_liquidity_one_coin(amount, params[1], 0)  # example: atricrypto3 on Polygon
@@ -351,6 +357,8 @@ def get_dy(
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
+                                   10 - stable-ng
+
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for swap_type = 3.
@@ -369,22 +377,22 @@ def get_dy(
 
         # Calc output amount according to the swap type
         if params[2] == 1:
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amount = StablePool(swap).get_dy(convert(params[0], int128), convert(params[1], int128), amount)
             else:  # crypto or llamma
                 amount = CryptoPool(swap).get_dy(params[0], params[1], amount)
         elif params[2] == 2:
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amount = StablePool(swap).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
             else:  # crypto
                 amount = CryptoPool(swap).get_dy_underlying(params[0], params[1], amount)
         elif params[2] == 3:  # SWAP IS ZAP HERE !!!
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amount = StablePool(pool).get_dy_underlying(convert(params[0], int128), convert(params[1], int128), amount)
             else:  # crypto
                 amount = CryptoMetaZap(swap).get_dy(pool, params[0], params[1], amount)
         elif params[2] in [4, 5]:
-            if params[3] == 1: # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[0]] = amount
                 amount = STABLE_CALC.calc_token_amount(swap, output_token, amounts, params[4], True, True)
@@ -419,7 +427,7 @@ def get_dy(
                     else:  # tricrypto
                         amount = StablePool5Coins(swap).calc_token_amount(amounts, True)
         elif params[2] in [6, 7]:
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amount = StablePool(swap).calc_withdraw_one_coin(amount, convert(params[1], int128))
             else:  # crypto
                 amount = CryptoPool(swap).calc_withdraw_one_coin(amount, params[1])
@@ -476,6 +484,8 @@ def get_dx(
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
+                                   10 - stable-ng
+
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
     @param _pools Array of pools.
@@ -511,16 +521,25 @@ def get_dx(
                     amount = STABLE_CALC.get_dx(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool)
+            elif params[3] == 10:  # stable-ng
+                amount = StableNgPool(pool).get_dx(convert(params[0], int128), convert(params[1], int128), amount)
             elif params[3] in [2, 3]:  # crypto
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
             else:  # llamma
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
-        elif params[2] in [2, 3]:  # SWAP IS ZAP HERE !!!
+        elif params[2] in [2, 3]:
             if params[3] == 1:  # stable
                 if base_pool == empty(address):  # non-meta
                     amount = STABLE_CALC.get_dx_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins)
                 else:
                     amount = STABLE_CALC.get_dx_meta_underlying(pool, convert(params[0], int128), convert(params[1], int128), amount, n_coins, base_pool, base_token)
+            elif params[3] == 10:  # stable-ng
+                _n: int128 = convert(params[0], int128)
+                _k: int128 = convert(params[1], int128)
+                if _n > 0 and _k > 0:
+                    amount = STABLE_CALC.get_dx(base_pool, _n - 1, _k - 1, amount, n_coins - 1)
+                else:
+                    amount = StableNgPool(pool).get_dx_underlying(_n, _k, amount)
             else:  # crypto
                 if second_base_pool != empty(address):  # double-meta
                     # BASE_TOKEN IS BASE_POOL_ZAP HERE !!!
@@ -531,12 +550,12 @@ def get_dx(
                     amount = CRYPTO_CALC.get_dx_meta_underlying(pool, params[0], params[1], amount, n_coins, base_pool, base_token)
         elif params[2] in [4, 5]:
             # This is not correct. Should be something like calc_add_one_coin. But tests say that it's precise enough.
-            if params[3] == 1:  # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amount = StablePool(swap).calc_withdraw_one_coin(amount, convert(params[0], int128))
             else:  # crypto
                 amount = CryptoPool(swap).calc_withdraw_one_coin(amount, params[0])
         elif params[2] in [6, 7]:
-            if params[3] == 1: # stable
+            if params[3] in [1, 10]:  # stable and stable_ng
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[1]] = amount
                 amount = STABLE_CALC.calc_token_amount(swap, input_token, amounts, n_coins, False, True)
