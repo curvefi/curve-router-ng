@@ -29,6 +29,8 @@ interface CryptoPool:
 interface StableNgPool:
     def get_dx(i: int128, j: int128, amount: uint256) -> uint256: view
     def get_dx_underlying(i: int128, j: int128, amount: uint256) -> uint256: view
+    def calc_token_amount(_amounts: DynArray[uint256, 8], _is_deposit: bool) -> uint256: view
+    def add_liquidity(_amounts: DynArray[uint256, 8], _min_mint_amount: uint256) -> uint256: nonpayable
 
 interface CryptoPoolETH:
     def exchange(i: uint256, j: uint256, dx: uint256, min_dy: uint256, use_eth: bool): payable
@@ -276,7 +278,11 @@ def exchange(
                 use_eth: bool = input_token == ETH_ADDRESS or output_token == ETH_ADDRESS
                 CryptoMetaZap(swap).exchange(pool, params[0], params[1], amount, 0, use_eth, value=eth_amount)
         elif params[2] == 4:
-            if params[4] == 2:
+            if params[3] == 10:  # stable_ng
+                amounts: DynArray[uint256, 8] = [0, 0, 0, 0, 0, 0, 0, 0]
+                amounts[params[0]] = amount
+                StableNgPool(swap).add_liquidity(amounts, 0)
+            elif params[4] == 2:
                 amounts: uint256[2] = [0, 0]
                 amounts[params[0]] = amount
                 StablePool2Coins(swap).add_liquidity(amounts, 0, value=eth_amount)
@@ -425,10 +431,14 @@ def get_dy(
             else:  # crypto
                 amount = CryptoMetaZap(swap).get_dy(pool, params[0], params[1], amount)
         elif params[2] in [4, 5]:
-            if params[3] in [1, 10]:  # stable and stable_ng
+            if params[3] == 1:  # stable
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[0]] = amount
                 amount = STABLE_CALC.calc_token_amount(swap, output_token, amounts, params[4], True, True)
+            elif params[3] == 10:  # stable_ng
+                amounts: DynArray[uint256, 8] = [0, 0, 0, 0, 0, 0, 0, 0]
+                amounts[params[0]] = amount
+                amount = StableNgPool(swap).calc_token_amount(amounts, True)
             else:
                 # Tricrypto pools have stablepool interface for calc_token_amount
                 if params[4] == 2:
@@ -597,10 +607,14 @@ def get_dx(
             else:  # crypto
                 amount = CryptoPool(swap).calc_withdraw_one_coin(amount, params[0])
         elif params[2] in [6, 7]:
-            if params[3] in [1, 10]:  # stable and stable_ng
+            if params[3] == 1:  # stable
                 amounts: uint256[10] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[1]] = amount
                 amount = STABLE_CALC.calc_token_amount(swap, input_token, amounts, n_coins, False, True)
+            elif params[3] == 10:  # stable_ng
+                amounts: DynArray[uint256, 8] = [0, 0, 0, 0, 0, 0, 0, 0]
+                amounts[params[1]] = amount
+                amount = StableNgPool(swap).calc_token_amount(amounts, False)
             else:
                 # Tricrypto pools have stablepool interface for calc_token_amount
                 if n_coins == 2:
