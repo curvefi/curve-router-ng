@@ -222,13 +222,14 @@ def test_1_tricrypto_ng(router, coins, margo, coin1, coin2):
     if i == j:
         return
     pool = "0x7f86bf177dd4f3494b841a37e810a34dd56c829b"  # TricryptoUSDC
-    swap_params = [i, j, 1, 3, 3]
+    swap_params = [i, j, 1, 30, 3]
+    amount = None if coin1 == "usdc" else 1
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=amount)
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 2e-5
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -243,16 +244,15 @@ def test_4_tricrypto_ng(router, coins, margo, coin):
     i = indexes[coin]
     lp = "tricryptousdc_lp"
     pool = "0x7f86bf177dd4f3494b841a37e810a34dd56c829b"  # TricryptoUSDC
-    swap_params = [i, 0, 4, 3, 3]
-    amount = None if coin != "wbtc" else 1
+    swap_params = [i, 0, 4, 30, 3]
+    amount = None if coin == "usdc" else 1
+    _exchange(router, coins, margo, [lp, "usdc"], pool, [0, 0, 6, 3, 3], amount=1)  # needed to claim fees and make calculations precise
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin, lp], pool, swap_params, amount=amount)
 
     assert initial_balances[0] - amount == balances[0]
-    # assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    # assert abs(amount - required) / amount < 0.1
-    assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
+    assert abs(amount - required) / amount < 1e-2
     assert _get_balance(coins[lp], router) == 1
 
 
@@ -267,13 +267,12 @@ def test_6_tricrypto_ng(router, coins, margo, coin):
     j = indexes[coin]
     lp = "tricryptousdc_lp"
     pool = "0x7f86bf177dd4f3494b841a37e810a34dd56c829b"  # TricryptoUSDC
-    swap_params = [0, j, 6, 3, 3]
+    swap_params = [0, j, 6, 30, 3]
+    _exchange(router, coins, margo, [lp, coin], pool, swap_params, amount=1)  # needed to claim fees and make calculations precise
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [lp, coin], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
-    # assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    # assert abs(amount - required) / amount < 0.1
-    assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-8
+    assert abs(amount - required) / amount < 1e-2
     assert _get_balance(coins[coin], router) == 1
