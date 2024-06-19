@@ -20,7 +20,7 @@ def test_1_stable_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
-    assert abs(amount - required) / amount < 3e-5
+    assert abs(amount - required) / amount < 1e-7
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -160,7 +160,7 @@ def test_1_twocrypto_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 1e-7
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -229,7 +229,7 @@ def test_1_tricrypto_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 2e-5
+    assert abs(amount - required) / amount < 1e-5
     assert _get_balance(coins[coin2], router) == 1
 
 
