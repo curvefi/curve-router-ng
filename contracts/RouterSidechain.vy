@@ -167,7 +167,7 @@ def exchange(
                         8. for ETH <-> WETH
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
-                                   10 - stable-ng
+                                   10 - stable-ng, 20 - twocrypto-ng
 
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
@@ -323,7 +323,7 @@ def get_dy(
                         8. for ETH <-> WETH
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
-                                   10 - stable-ng
+                                   10 - stable-ng, 20 - twocrypto-ng
 
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
@@ -373,7 +373,7 @@ def get_dy(
                     amounts[params[0]] = amount
                     if params[3] == 2:  # twocrypto
                         amount = CryptoPool2Coins(swap).calc_token_amount(amounts)
-                    else:  # tricrypto
+                    else:  # tricrypto, twocrypto-ng
                         amount = StablePool2Coins(swap).calc_token_amount(amounts, True)
                 elif params[4] == 3:
                     amounts: uint256[3] = [0, 0, 0]
@@ -452,7 +452,7 @@ def get_dx(
                         8. for ETH <-> WETH
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
-                                   10 - stable-ng
+                                   10 - stable-ng, 20 - twocrypto-ng
 
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
@@ -527,7 +527,7 @@ def get_dx(
                     amounts[params[1]] = amount
                     if params[3] == 2:  # twocrypto
                         amount = CryptoPool2Coins(swap).calc_token_amount(amounts)  # This is not correct
-                    else:  # tricrypto
+                    else:  # tricrypto, twocrypto-ng
                         amount = StablePool2Coins(swap).calc_token_amount(amounts, False)
                 elif n_coins == 3:
                     amounts: uint256[3] = [0, 0, 0]
