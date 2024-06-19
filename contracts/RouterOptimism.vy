@@ -32,6 +32,10 @@ interface StableNgPool:
     def calc_token_amount(_amounts: DynArray[uint256, 8], _is_deposit: bool) -> uint256: view
     def add_liquidity(_amounts: DynArray[uint256, 8], _min_mint_amount: uint256) -> uint256: nonpayable
 
+interface TriCryptoNgETH:
+    def add_liquidity(amounts: uint256[3], min_mint_amount: uint256, use_eth: bool) -> uint256: payable
+    def remove_liquidity_one_coin(token_amount: uint256, i: uint256, min_amount: uint256, use_eth: bool) -> uint256: nonpayable
+
 interface CryptoPoolETH:
     def exchange(i: uint256, j: uint256, dx: uint256, min_dy: uint256, use_eth: bool): payable
 
@@ -192,7 +196,7 @@ def exchange(
                         9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
-                                   10 - stable-ng, 20 - twocrypto-ng
+                                   10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
 
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
@@ -251,6 +255,13 @@ def exchange(
                 amounts: DynArray[uint256, 8] = [0, 0, 0, 0, 0, 0, 0, 0]
                 amounts[params[0]] = amount
                 StableNgPool(swap).add_liquidity(amounts, 0)
+            elif params[3] == 30:  # tricrypto-ng
+                amounts: uint256[3] = [0, 0, 0]
+                amounts[params[0]] = amount
+                if eth_amount > 0:
+                    TriCryptoNgETH(swap).add_liquidity(amounts, 0, True, value=eth_amount)
+                else:
+                    StablePool3Coins(swap).add_liquidity(amounts, 0)
             elif params[4] == 2:
                 amounts: uint256[2] = [0, 0]
                 amounts[params[0]] = amount
@@ -274,6 +285,8 @@ def exchange(
         elif params[2] == 6:
             if params[3] in [1, 10]:  # stable and stable_ng
                 StablePool(swap).remove_liquidity_one_coin(amount, convert(params[1], int128), 0)
+            elif params[3] == 30 and output_token == ETH_ADDRESS:  # tricrypto-ng & ETH
+                TriCryptoNgETH(swap).remove_liquidity_one_coin(amount, params[1], 0, True)
             else:  # crypto
                 CryptoPool(swap).remove_liquidity_one_coin(amount, params[1], 0)  # example: atricrypto3 on Polygon
         elif params[2] == 7:
@@ -351,7 +364,7 @@ def get_dy(
                         9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
-                                   10 - stable-ng, 20 - twocrypto-ng
+                                   10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
 
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
@@ -408,7 +421,7 @@ def get_dy(
                     amounts[params[0]] = amount
                     if params[3] == 2:  # twocrypto
                         amount = CryptoPool3Coins(swap).calc_token_amount(amounts)
-                    else:  # tricrypto
+                    else:  # tricrypto, tricrypto-ng
                         amount = StablePool3Coins(swap).calc_token_amount(amounts, True)
                 elif params[4] == 4:
                     amounts: uint256[4] = [0, 0, 0, 0]
@@ -487,7 +500,7 @@ def get_dx(
                         9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
-                                   10 - stable-ng, 20 - twocrypto-ng
+                                   10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
 
                         n_coins is the number of coins in pool
     @param _out_amount The desired amount of output coin to receive.
@@ -569,7 +582,7 @@ def get_dx(
                     amounts[params[1]] = amount
                     if params[3] == 2:  # twocrypto
                         amount = CryptoPool3Coins(swap).calc_token_amount(amounts)  # This is not correct
-                    else:  # tricrypto
+                    else:  # tricrypto, tricrypto-ng
                         amount = StablePool3Coins(swap).calc_token_amount(amounts, False)
                 elif n_coins == 4:
                     amounts: uint256[4] = [0, 0, 0, 0]
