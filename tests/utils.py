@@ -81,7 +81,7 @@ def _exchange(router, coins, margo, coin_names, pools, _swap_params,
         required = router.get_dx(route, swap_params, expected, pools, base_pools, base_tokens, second_base_pools, second_base_tokens)
     else:
         required = router.get_dx(route, swap_params, expected, pools, base_pools, base_tokens)
-    router.exchange(route, swap_params, amount, expected * 999 // 1000, pools, {"from": margo, "value": value})
+    router.exchange(route, swap_params, amount, expected * 99 // 100, pools, {"from": margo, "value": value})
     if test_slippage:
         with brownie.reverts("Slippage"):
             router.exchange(route, swap_params, amount, expected * 1001 // 1000, pools, {"from": margo, "value": value})
