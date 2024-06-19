@@ -501,7 +501,7 @@ def get_dx(
                 amount = StableNgPool(pool).get_dx(convert(params[0], int128), convert(params[1], int128), amount)
             elif params[3] in [2, 3]:  # crypto
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
-            else:  # llamma
+            else:  # llamma, twocrypto-ng, tricrypto-ng
                 amount = Llamma(pool).get_dx(params[0], params[1], amount)
         elif params[2] in [2, 3]:
             if params[3] == 1:  # stable
