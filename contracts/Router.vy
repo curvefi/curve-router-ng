@@ -107,19 +107,6 @@ interface wBETH:
     def deposit(referral: address): payable
     def exchangeRate() -> uint256: view
 
-# SNX
-interface SnxCoin:
-    def currencyKey() -> bytes32: nonpayable
-
-interface Synthetix:
-    def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
-
-interface SynthetixExchanger:
-    def getAmountsForAtomicExchange(sourceAmount: uint256, sourceCurrencyKey: bytes32, destinationCurrencyKey: bytes32) -> AtomicAmountAndFee: view
-
-interface SynthetixAddressResolver:
-    def getAddress(name: bytes32) -> address: view
-
 # Calc zaps
 interface StableCalc:
     def calc_token_amount(pool: address, token: address, amounts: uint256[10], n_coins: uint256, deposit: bool, use_underlying: bool) -> uint256: view
@@ -157,14 +144,6 @@ SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
 WBETH_ADDRESS: constant(address) = 0xa2E3356610840701BDf5611a53974510Ae27E2e1
 WETH_ADDRESS: immutable(address)
 
-
-# SNX
-# https://github.com/Synthetixio/synthetix-docs/blob/master/content/addresses.md
-SNX_ADDRESS_RESOLVER: constant(address) = 0x823bE81bbF96BEc0e25CA13170F5AaCb5B79ba83
-SNX_TRACKING_CODE: constant(bytes32) = 0x4355525645000000000000000000000000000000000000000000000000000000  # CURVE
-SNX_EXCHANGER_NAME: constant(bytes32) = 0x45786368616E6765720000000000000000000000000000000000000000000000  # Exchanger
-snx_currency_keys: HashMap[address, bytes32]
-
 # Calc zaps
 STABLE_CALC: immutable(StableCalc)
 CRYPTO_CALC: immutable(CryptoCalc)
@@ -179,17 +158,13 @@ def __default__():
 
 
 @external
-def __init__( _weth: address, _stable_calc: address, _crypto_calc: address, _snx_coins: address[4]):
+def __init__( _weth: address, _stable_calc: address, _crypto_calc: address):
     self.is_approved[WSTETH_ADDRESS][WSTETH_ADDRESS] = True
     self.is_approved[SFRXETH_ADDRESS][SFRXETH_ADDRESS] = True
 
     WETH_ADDRESS = _weth
     STABLE_CALC = StableCalc(_stable_calc)
     CRYPTO_CALC = CryptoCalc(_crypto_calc)
-
-    for _snx_coin in _snx_coins:
-        self.is_approved[_snx_coin][0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F] = True
-        self.snx_currency_keys[_snx_coin] = SnxCoin(_snx_coin).currencyKey()
 
 
 @external
@@ -224,7 +199,6 @@ def exchange(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
-                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -343,8 +317,6 @@ def exchange(
                 wBETH(swap).deposit(0xeCb456EA5365865EbAb8a2661B0c503410e9B347, value=amount)
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
-        elif params[2] == 9:
-            Synthetix(swap).exchangeAtomically(self.snx_currency_keys[input_token], amount, self.snx_currency_keys[output_token], SNX_TRACKING_CODE, 0)
         else:
             raise "Bad swap type"
 
@@ -406,7 +378,6 @@ def get_dy(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
-                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -507,12 +478,6 @@ def get_dy(
                 amount = amount * 10**18 / wBETH(swap).exchangeRate()
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
-        elif params[2] == 9:
-            snx_exchanger: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGER_NAME)
-            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchanger).getAmountsForAtomicExchange(
-                amount, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
-            )
-            amount = atomic_amount_and_fee.amountReceived
         else:
             raise "Bad swap type"
 
@@ -556,7 +521,6 @@ def get_dx(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
                         8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
-                        9. for SNX swaps (sUSD, sEUR, sETH, sBTC)
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -678,12 +642,6 @@ def get_dx(
                 amount = amount * wBETH(swap).exchangeRate() / 10**18
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
-        elif params[2] == 9:
-            snx_exchanger: address = SynthetixAddressResolver(SNX_ADDRESS_RESOLVER).getAddress(SNX_EXCHANGER_NAME)
-            atomic_amount_and_fee: AtomicAmountAndFee = SynthetixExchanger(snx_exchanger).getAmountsForAtomicExchange(
-                10**18, self.snx_currency_keys[input_token], self.snx_currency_keys[output_token]
-            )
-            amount = amount * 10**18 / atomic_amount_and_fee.amountReceived
         else:
             raise "Bad swap type"
 

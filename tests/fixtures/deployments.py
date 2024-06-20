@@ -6,12 +6,6 @@ INIT_DATA = {
     "ethereum": {
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
         "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
-        "snx_coins": [
-            "0x57Ab1ec28D129707052df4dF418D58a2D46d5f51",  # sUSD
-            "0xD71eCFF9342A5Ced620049e616c5035F1dB98620",  # sEUR
-            "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb",  # sETH
-            "0xfE18be6b3Bd88A2D2A7f928d00292E7a9963CfC6",  # sBTC
-        ]
     },
     "optimism": {
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
@@ -50,8 +44,7 @@ def router(Router, RouterOptimism, RouterSidechain, RouterSidechainTricryptoMeta
     stable_calc = INIT_DATA[network]["stable_calc"]
     crypto_calc = INIT_DATA[network]["crypto_calc"]
     if network == "ethereum":
-        snx_coins = INIT_DATA[network]["snx_coins"]
-        return Router.deploy(weth[network], stable_calc, crypto_calc, snx_coins, {'from': alice})
+        return Router.deploy(weth[network], stable_calc, crypto_calc, {'from': alice})
     if network == "optimism":
         snx_coins = INIT_DATA[network]["snx_coins"]
         return RouterOptimism.deploy(weth[network], stable_calc, crypto_calc, snx_coins, {'from': alice})

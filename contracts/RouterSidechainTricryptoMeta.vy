@@ -107,16 +107,6 @@ interface wBETH:
     def deposit(referral: address): payable
     def exchangeRate() -> uint256: view
 
-# SNX
-interface Synthetix:
-    def exchangeAtomically(sourceCurrencyKey: bytes32, sourceAmount: uint256, destinationCurrencyKey: bytes32, trackingCode: bytes32, minAmount: uint256) -> uint256: nonpayable
-
-interface SynthetixExchanger:
-    def getAmountsForAtomicExchange(sourceAmount: uint256, sourceCurrencyKey: bytes32, destinationCurrencyKey: bytes32) -> AtomicAmountAndFee: view
-
-interface SynthetixAddressResolver:
-    def getAddress(name: bytes32) -> address: view
-
 # Calc zaps
 interface StableCalc:
     def calc_token_amount(pool: address, token: address, amounts: uint256[10], n_coins: uint256, deposit: bool, use_underlying: bool) -> uint256: view

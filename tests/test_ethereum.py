@@ -1,5 +1,5 @@
 import pytest
-from utils import _exchange, _is_weekend, _get_balance
+from utils import _exchange, _get_balance
 
 pytestmark = pytest.mark.usefixtures("mint_margo", "approve_margo")
 
@@ -499,22 +499,6 @@ def test_8_wbeth(router, coins, margo):
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
     assert abs(amount - required) / amount < 1e-15
-    assert _get_balance(coins[coin2], router) == 1
-
-
-@pytest.mark.parametrize("coin1", ["susd", "seur", "seth", "sbtc"])
-@pytest.mark.parametrize("coin2", ["susd", "seur", "seth", "sbtc"])
-def test_9(router, coins, margo, coin1, coin2):
-    if coin1 == coin2 or (_is_weekend() and "seur" in [coin1, coin2]):
-        return
-    pool = "0xC011a73ee8576Fb46F5E1c5751cA3B9Fe0af2a6F"  # SNX
-    swap_params = [0, 0, 9, 0, 0]
-    amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, test_slippage=False)
-
-    assert initial_balances[0] - amount == balances[0]
-    assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-3
     assert _get_balance(coins[coin2], router) == 1
 
 
