@@ -76,15 +76,18 @@ def _exchange(router, coins, margo, coin_names, pools, _swap_params,
     value = amount if from_coin == ETH_ADDRESS else 0
 
     initial_balances = [_get_balance(from_coin, margo), _get_balance(to_coin, margo)]
+
     expected = router.get_dy(route, swap_params, amount, pools)
     if chain.id == 137:
         required = router.get_dx(route, swap_params, expected, pools, base_pools, base_tokens, second_base_pools, second_base_tokens)
     else:
         required = router.get_dx(route, swap_params, expected, pools, base_pools, base_tokens)
-    router.exchange(route, swap_params, amount, expected * 99 // 100, pools, {"from": margo, "value": value})
+
     if test_slippage:
         with brownie.reverts("Slippage"):
             router.exchange(route, swap_params, amount, expected * 1001 // 1000, pools, {"from": margo, "value": value})
+    router.exchange(route, swap_params, amount, expected * 99 // 100, pools, {"from": margo, "value": value})
+
     balances = [_get_balance(from_coin, margo), _get_balance(to_coin, margo)]
 
     return amount, expected, required, initial_balances, balances
