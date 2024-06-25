@@ -169,12 +169,13 @@ def test_1_llamma_wbtc(router, coins, margo, coin1, coin2):
         i, j = 1, 0
     pool = "0xe0438eb3703bf871e31ce639bd351109c88666ea"  # wbtc llamma
     swap_params = [i, j, 1, 4, 2]
+    amount = 1000 if coin1 == "crvusd" else 0.1
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=1)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=amount)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-3 or (balances[1] - initial_balances[1]) - expected <= 10
-    assert abs(amount - required) / amount < 2e-3
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4
+    assert abs(amount - required) / amount < 1e-4
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -188,12 +189,13 @@ def test_1_llamma_weth(router, coins, margo, coin1, coin2):
         i, j = 1, 0
     pool = "0x1681195c176239ac5e72d9aebacf5b2492e0c4ee"  # weth llamma
     swap_params = [i, j, 1, 4, 2]
+    amount = 300 if coin1 == "crvusd" else 0.1
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=10)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=amount)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-3 or (balances[1] - initial_balances[1]) - expected <= 10
-    assert abs(amount - required) / amount < 1e-3
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4
+    assert abs(amount - required) / amount < 1e-4
     assert _get_balance(coins[coin2], router) == 1
 
 
