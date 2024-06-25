@@ -27,10 +27,6 @@
     "decimals": 18,
     "address": "0x5e74C9036fb86BD7eCdcb084a0673EFc32eA31cb"
   },
-  "sbtc": {
-    "decimals": 18,
-    "address": "0xfe18be6b3bd88a2d2a7f928d00292e7a9963cfc6"
-  },
   "seur": {
     "decimals": 18,
     "address": "0xD71eCFF9342A5Ced620049e616c5035F1dB98620"
@@ -62,6 +58,11 @@
   "cdai": {
     "decimals": 8,
     "address": "0x5d3a536e4d6dbd6114cc1ead35777bab948e3643",
+    "interface": "cERC20"
+  },
+  "cusdc": {
+    "decimals": 8,
+    "address": "0x39aa39c021dfbae8fac545936693ac917d5e7563",
     "interface": "cERC20"
   },
   "wbtc": {
@@ -96,10 +97,6 @@
     "decimals": 18,
     "address": "0xFC2838a17D8e8B1D5456E0a351B0708a09211147"
   },
-  "sbtc2_lp": {
-    "decimals": 18,
-    "address": "0x051d7e5609917Bd9b73f04BAc0DED8Dd46a74301"
-  },
   "cvxeth_lp": {
     "decimals": 18,
     "address": "0x3a283d9c08e8b55966afb64c515f5143cf907611"
@@ -123,5 +120,33 @@
   "wbeth": {
     "decimals": 18,
     "address": "0xa2E3356610840701BDf5611a53974510Ae27E2e1"
+  },
+  "pyusd": {
+    "decimals": 6,
+    "address": "0x6c3ea9036406852006290770bedfcaba0e23a0e8"
+  },
+  "usdm": {
+    "decimals": 18,
+    "address": "0x59d9356e565ab3a36dd77763fc0d87feaf85508c"
+  },
+  "mkusd": {
+    "decimals": 18,
+    "address": "0x4591dbff62656e7859afe5e45f6f47d3669fbb28"
+  },
+  "paypool_lp": {
+    "decimals": 18,
+    "address": "0x383e6b4437b59fff47b619cba855ca29342a8559"
+  },
+  "tricryptousdc_lp": {
+    "decimals": 18,
+    "address": "0x7f86bf177dd4f3494b841a37e810a34dd56c829b"
+  },
+  "cvg": {
+    "decimals": 18,
+    "address": "0x97effb790f2fbb701d88f89db4521348a2b77be8"
+  },
+  "cvgeth_lp": {
+    "decimals": 18,
+    "address": "0x004c167d27ada24305b76d80762997fa6eb8d9b2"
   }
 }
