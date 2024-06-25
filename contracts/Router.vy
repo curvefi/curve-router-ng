@@ -142,6 +142,8 @@ WSTETH_ADDRESS: constant(address) = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0
 FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
 SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
 WBETH_ADDRESS: constant(address) = 0xa2E3356610840701BDf5611a53974510Ae27E2e1
+USDE_ADDRESS: constant(address) = 0x4c9EDD5852cd905f086C759E8383e09bff1E68B3
+SUSDE_ADDRESS: constant(address) = 0x9D39A5DE30e57443BfF2A8307A4256c8797A3497
 WETH_ADDRESS: immutable(address)
 
 # Calc zaps
@@ -315,6 +317,8 @@ def exchange(
                 sfrxETH(swap).redeem(amount, self, self)
             elif input_token == ETH_ADDRESS and output_token == WBETH_ADDRESS:
                 wBETH(swap).deposit(0xeCb456EA5365865EbAb8a2661B0c503410e9B347, value=amount)
+            elif input_token == USDE_ADDRESS and output_token == SUSDE_ADDRESS:
+                sfrxETH(swap).deposit(amount, self)
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
         else:
@@ -476,6 +480,8 @@ def get_dy(
                 amount = sfrxETH(swap).convertToShares(amount)
             elif output_token == WBETH_ADDRESS:
                 amount = amount * 10**18 / wBETH(swap).exchangeRate()
+            elif output_token == SUSDE_ADDRESS:
+                amount = sfrxETH(swap).convertToShares(amount)
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
         else:
@@ -640,6 +646,8 @@ def get_dx(
                 amount = sfrxETH(swap).convertToAssets(amount)
             elif output_token == WBETH_ADDRESS:
                 amount = amount * wBETH(swap).exchangeRate() / 10**18
+            elif output_token == SUSDE_ADDRESS:
+                amount = sfrxETH(swap).convertToAssets(amount)
             else:
                 raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
         else:
