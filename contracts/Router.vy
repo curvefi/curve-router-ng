@@ -200,7 +200,7 @@ def exchange(
                         5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
-                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
+                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -320,7 +320,7 @@ def exchange(
             elif input_token == USDE_ADDRESS and output_token == SUSDE_ADDRESS:
                 sfrxETH(swap).deposit(amount, self)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe"
         else:
             raise "Bad swap type"
 
@@ -381,7 +381,7 @@ def get_dy(
                         5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
-                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
+                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -483,7 +483,7 @@ def get_dy(
             elif output_token == SUSDE_ADDRESS:
                 amount = sfrxETH(swap).convertToShares(amount)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe"
         else:
             raise "Bad swap type"
 
@@ -526,7 +526,7 @@ def get_dx(
                         5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
-                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH
+                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -649,7 +649,7 @@ def get_dx(
             elif output_token == SUSDE_ADDRESS:
                 amount = sfrxETH(swap).convertToAssets(amount)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH"
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe"
         else:
             raise "Bad swap type"
 
