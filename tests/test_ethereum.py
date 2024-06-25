@@ -612,6 +612,20 @@ def test_8_wbeth(router, coins, margo):
     assert _get_balance(coins[coin2], router) == 1
 
 
+def test_8_susde(router, coins, margo):
+    coin1 = "usde"
+    coin2 = "susde"
+    pool = coins[coin2].address
+    swap_params = [0, 0, 8, 0, 0]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
+    assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
+
+
 def test_route_2_steps(router, coins, margo):
     coin_names = ["eurt", "3crv", "dchf"]
     pools = [
