@@ -122,12 +122,6 @@ interface CryptoCalc:
     def get_dx_double_meta_underlying(pool: address, i: uint256, j: uint256, dy: uint256, base_pool: address, base_pool_zap: address, base_pool2: address, base_token2: address) -> uint256: view
 
 
-struct AtomicAmountAndFee:
-    amountReceived: uint256
-    fee: uint256
-    exchangeFeeRate: uint256
-
-
 event Exchange:
     sender: indexed(address)
     receiver: indexed(address)
