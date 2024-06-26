@@ -7,7 +7,6 @@ pytestmark = pytest.mark.usefixtures("mint_margo", "approve_margo")
 @pytest.mark.parametrize("coin1", ["avdai", "avusdc", "avusdt"])
 @pytest.mark.parametrize("coin2", ["avdai", "avusdc", "avusdt"])
 def test_1_stable(router, coins, margo, coin1, coin2):
-    assert False
     indexes = {
         "avdai": 0,
         "avusdc": 1,

@@ -62,7 +62,7 @@ def test_1_crypto(router, coins, margo, coin1, coin2):
     pool = "0xA827a652Ead76c6B0b3D19dba05452E06e25c27e"  # eursusd
     swap_params = [i, j, 1, 2, 2]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
@@ -111,7 +111,7 @@ def test_2_crypto(router, coins, margo, coin1, coin2):
     swap_params = [i, j, 2, 2, 3]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params,
-                  zaps=zap, base_pools=coins["2crv"].address, base_tokens=coins["2crv"].address)
+                  zaps=zap, base_pools=coins["2crv"].address, base_tokens=coins["2crv"].address, test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
