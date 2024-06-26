@@ -10,19 +10,18 @@
 from vyper.interfaces import ERC20
 
 interface StablePool:
-    def exchange(i: int128, j: int128, dx: uint256, min_dy: uint256): payable
-    def exchange_underlying(i: int128, j: int128, dx: uint256, min_dy: uint256): payable
     def get_dy(i: int128, j: int128, amount: uint256) -> uint256: view
+    def exchange(i: int128, j: int128, dx: uint256, min_dy: uint256): payable
     def get_dy_underlying(i: int128, j: int128, amount: uint256) -> uint256: view
-    def coins(i: uint256) -> address: view
+    def exchange_underlying(i: int128, j: int128, dx: uint256, min_dy: uint256): payable
     def calc_withdraw_one_coin(token_amount: uint256, i: int128) -> uint256: view
     def remove_liquidity_one_coin(token_amount: uint256, i: int128, min_amount: uint256): nonpayable
 
 interface CryptoPool:
-    def exchange(i: uint256, j: uint256, dx: uint256, min_dy: uint256): payable
-    def exchange_underlying(i: uint256, j: uint256, dx: uint256, min_dy: uint256): payable
     def get_dy(i: uint256, j: uint256, amount: uint256) -> uint256: view
+    def exchange(i: uint256, j: uint256, dx: uint256, min_dy: uint256): payable
     def get_dy_underlying(i: uint256, j: uint256, amount: uint256) -> uint256: view
+    def exchange_underlying(i: uint256, j: uint256, dx: uint256, min_dy: uint256): payable
     def calc_withdraw_one_coin(token_amount: uint256, i: uint256) -> uint256: view
     def remove_liquidity_one_coin(token_amount: uint256, i: uint256, min_amount: uint256): nonpayable
 
@@ -31,6 +30,9 @@ interface StableNgPool:
     def get_dx_underlying(i: int128, j: int128, amount: uint256) -> uint256: view
     def calc_token_amount(_amounts: DynArray[uint256, 8], _is_deposit: bool) -> uint256: view
     def add_liquidity(_amounts: DynArray[uint256, 8], _min_mint_amount: uint256) -> uint256: nonpayable
+
+interface CryptoNgPool:
+    def get_dx(i: uint256, j: uint256, out_amount: uint256) -> uint256: view
 
 interface TriCryptoNgETH:
     def add_liquidity(amounts: uint256[3], min_mint_amount: uint256, use_eth: bool) -> uint256: payable
@@ -77,9 +79,6 @@ interface CryptoPool5Coins:
 interface LendingStablePool3Coins:
     def add_liquidity(amounts: uint256[3], min_mint_amount: uint256, use_underlying: bool): payable
     def remove_liquidity_one_coin(token_amount: uint256, i: int128, min_amount: uint256, use_underlying: bool) -> uint256: nonpayable
-
-interface Llamma:
-    def get_dx(i: uint256, j: uint256, out_amount: uint256) -> uint256: view
 
 interface WETH:
     def deposit(): payable
@@ -537,7 +536,7 @@ def get_dx(
             elif params[3] in [2, 3]:  # crypto
                 amount = CRYPTO_CALC.get_dx(pool, params[0], params[1], amount, n_coins)
             else:  # llamma, twocrypto-ng, tricrypto-ng
-                amount = Llamma(pool).get_dx(params[0], params[1], amount)
+                amount = CryptoNgPool(pool).get_dx(params[0], params[1], amount)
         elif params[2] in [2, 3]:
             if params[3] == 1:  # stable
                 if base_pool == empty(address):  # non-meta
