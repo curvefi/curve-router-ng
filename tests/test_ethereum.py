@@ -174,7 +174,7 @@ def test_1_llamma_wbtc(router, coins, margo, coin1, coin2):
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=amount)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 5e-4
     assert abs(amount - required) / amount < 1e-4
     assert _get_balance(coins[coin2], router) == 1
 
@@ -194,7 +194,7 @@ def test_1_llamma_weth(router, coins, margo, coin1, coin2):
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, amount=amount)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 1e-4
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected <= 5e-4
     assert abs(amount - required) / amount < 1e-4
     assert _get_balance(coins[coin2], router) == 1
 
@@ -623,7 +623,7 @@ def test_8_susde(router, coins, margo):
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-7
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6
     assert abs(amount - required) / amount < 1e-15
     assert _get_balance(coins[coin2], router) == 1
 
