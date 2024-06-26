@@ -1,13 +1,14 @@
 # @version 0.3.10
 
 """
-@title CurveRouterNgPoolsOnly v1.0
+@title CurveRouterNgPoolsOnly v1.1
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
 """
 
-version: public(constant(String[8])) = "1.0.0"  # Initial
+version: public(constant(String[8])) = "1.1.0"  # ng pools
+
 
 from vyper.interfaces import ERC20
 

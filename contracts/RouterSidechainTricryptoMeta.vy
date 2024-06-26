@@ -1,11 +1,14 @@
 # @version 0.3.10
 
 """
-@title CurveRouterSidechainTricryptoMeta v1.0
+@title CurveRouterSidechainTricryptoMeta v1.1
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
 """
+
+version: public(constant(String[8])) = "1.1.0"  # ng pools
+
 
 from vyper.interfaces import ERC20
 
@@ -197,6 +200,7 @@ def exchange(
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
 
                         n_coins is the number of coins in pool
+
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _min_dy The minimum amount received after the final swap.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for swap_type = 3.
