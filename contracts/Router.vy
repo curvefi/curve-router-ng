@@ -169,7 +169,7 @@ def exchange(
     _route: address[11],
     _swap_params: uint256[5][5],
     _amount: uint256,
-    _expected: uint256,
+    _min_dy: uint256,
     _pools: address[5]=empty(address[5]),
     _receiver: address=msg.sender
 ) -> uint256:
@@ -200,7 +200,7 @@ def exchange(
 
                         n_coins is the number of coins in pool
     @param _amount The amount of input token (`_route[0]`) to be sent.
-    @param _expected The minimum amount received after the final swap.
+    @param _min_dy The minimum amount received after the final swap.
     @param _pools Array of pools for swaps via zap contracts. This parameter is only needed for swap_type = 3.
     @param _receiver Address to transfer the final output token to.
     @return Received amount of the final output token.
@@ -333,7 +333,7 @@ def exchange(
         input_token = output_token
 
     amount -= 1  # Change non-zero -> non-zero costs less gas than zero -> non-zero
-    assert amount >= _expected, "Slippage"
+    assert amount >= _min_dy, "Slippage"
 
     # transfer the final token to the receiver
     if output_token == ETH_ADDRESS:
