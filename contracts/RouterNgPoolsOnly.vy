@@ -90,7 +90,7 @@ def exchange(
     @param _route Array of [initial token, pool, token, pool, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
-    @param _swap_params Multidimensional array of [i, j, swap type, pool_type] where
+    @param _swap_params Multidimensional array of [i, j, swap_type, pool_type] where
                         i is the index of input token
                         j is the index of output token
 
@@ -216,7 +216,7 @@ def get_dy(
     @param _route Array of [initial token, pool, token, pool, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
-    @param _swap_params Multidimensional array of [i, j, swap type, pool_type] where
+    @param _swap_params Multidimensional array of [i, j, swap_type, pool_type] where
                         i is the index of input token
                         j is the index of output token
 
@@ -295,7 +295,7 @@ def get_dx(
     @param _route Array of [initial token, pool, token, pool, token, ...]
                   The array is iterated until a pool address of 0x00, then the last
                   given token is transferred to `_receiver`
-    @param _swap_params Multidimensional array of [i, j, swap type, pool_type] where
+    @param _swap_params Multidimensional array of [i, j, swap_type, pool_type] where
                         i is the index of input token
                         j is the index of output token
 
