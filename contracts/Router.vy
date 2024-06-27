@@ -220,12 +220,12 @@ def exchange(
         assert msg.value == 0
         assert ERC20(input_token).transferFrom(msg.sender, self, amount, default_return_value=True)
 
-    for i in range(1, 6):
+    for i in range(5):
         # 5 rounds of iteration to perform up to 5 swaps
-        swap: address = _route[i*2-1]
-        pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 6)
-        output_token = _route[i*2]
-        params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
+        swap: address = _route[i * 2 + 1]
+        pool: address = _pools[i]  # Only for Polygon meta-factories underlying swap (swap_type == 6)
+        output_token = _route[(i + 1) * 2]
+        params: uint256[5] = _swap_params[i]  # i, j, swap_type, pool_type, n_coins
 
         if not self.is_approved[input_token][swap]:
             assert ERC20(input_token).approve(swap, max_value(uint256), default_return_value=True, skip_contract_check=True)
@@ -331,7 +331,7 @@ def exchange(
         assert amount != 0, "Received nothing"
 
         # check if this was the last swap
-        if i == 5 or _route[i*2+1] == empty(address):
+        if i == 4 or _route[i * 2 + 3] == empty(address):
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -384,6 +384,7 @@ def get_dy(
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
 
                         n_coins is the number of coins in pool
+
     @param _amount The amount of input token (`_route[0]`) to be sent.
     @param _pools Array of pools for swaps via zap contracts. This parameter is needed only for swap_type = 3.
     @return Expected amount of the final output token.
@@ -392,12 +393,12 @@ def get_dy(
     output_token: address = empty(address)
     amount: uint256 = _amount
 
-    for i in range(1, 6):
+    for i in range(5):
         # 5 rounds of iteration to perform up to 5 swaps
-        swap: address = _route[i*2-1]
-        pool: address = _pools[i-1] # Only for Polygon meta-factories underlying swap (swap_type == 4)
-        output_token = _route[i * 2]
-        params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
+        swap: address = _route[i * 2 + 1]
+        pool: address = _pools[i]  # Only for Polygon meta-factories underlying swap (swap_type == 4)
+        output_token = _route[(i + 1) * 2]
+        params: uint256[5] = _swap_params[i]  # i, j, swap_type, pool_type, n_coins
 
         # Calc output amount according to the swap type
         if params[2] == 1:
@@ -485,7 +486,7 @@ def get_dy(
             raise "Bad swap type"
 
         # check if this was the last swap
-        if i == 5 or _route[i*2+1] == empty(address):
+        if i == 4 or _route[i * 2 + 3] == empty(address):
             break
         # if there is another swap, the output token becomes the input for the next round
         input_token = output_token
@@ -537,20 +538,19 @@ def get_dx(
     """
     amount: uint256 = _out_amount
 
-    for _i in range(1, 6):
+    for _i in range(5):
         # 5 rounds of iteration to perform up to 5 swaps
-        i: uint256 = 6 - _i
-        swap: address = _route[i*2-1]
+        i: uint256 = 4 - _i
+        swap: address = _route[i * 2 + 1]
         if swap == empty(address):
             continue
-        input_token: address = _route[(i - 1) * 2]
-        output_token: address = _route[i * 2]
-        pool: address = _pools[i-1]
-        base_pool: address = _base_pools[i-1]
-        base_token: address = _base_tokens[i-1]
-        params: uint256[5] = _swap_params[i-1]  # i, j, swap_type, pool_type, n_coins
+        input_token: address = _route[i * 2]
+        output_token: address = _route[(i + 1) * 2]
+        pool: address = _pools[i]
+        base_pool: address = _base_pools[i]
+        base_token: address = _base_tokens[i]
+        params: uint256[5] = _swap_params[i]  # i, j, swap_type, pool_type, n_coins
         n_coins: uint256 = params[4]
-
 
         # Calc a required input amount according to the swap type
         if params[2] == 1:
