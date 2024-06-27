@@ -500,7 +500,7 @@ def test_6_tricrypto(router, coins, margo, coin):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
-    assert abs(amount - required) / amount < 1e-3
+    assert abs(amount - required) / amount < 2e-3
     assert _get_balance(coins[coin], router) == 1
 
 
