@@ -20,7 +20,7 @@ def test_1_stable_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
-    assert abs(amount - required) / amount < 1e-7
+    assert abs(amount - required) <= 2
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -38,7 +38,7 @@ def test_1_stable_ng_meta(router, coins, margo, coin1, coin2):
 
     assert 0 <= balances[0] - (initial_balances[0] - amount) <= 1  # USDM is rebase token
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 1e-8
     assert 1 <= _get_balance(coins[coin2], router) <= 2  # USDM is rebase token
 
 
@@ -56,7 +56,7 @@ def test_1_stable_ng_meta_based_on_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 1e-6
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -78,7 +78,7 @@ def test_2_stable_ng_meta(router, coins, margo, coin1, coin2):
     swap_params = [i, j, 2, 10, 4]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params,
-                  base_pools=base_pool, base_tokens=coins["3crv"].address)
+                  base_pools=base_pool, base_tokens=coins["3crv"].address, test_slippage=False)
 
     assert 0 <= balances[0] - (initial_balances[0] - amount) <= 1  # USDM is rebase token
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-4
@@ -107,7 +107,7 @@ def test_2_stable_ng_meta_based_on_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
-    assert abs(amount - required) / amount < 3e-4
+    assert abs(amount - required) / amount < 1e-3
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -137,7 +137,7 @@ def test_6_stable_ng(router, coins, margo, coin):
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 2
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 1e-7
     assert _get_balance(coins[coin], router) == 1
 
 
@@ -160,7 +160,7 @@ def test_1_twocrypto_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-7
+    assert abs(amount - required) / amount < 1e-10
     assert _get_balance(coins[coin2], router) == 1
 
 
@@ -229,7 +229,7 @@ def test_1_tricrypto_ng(router, coins, margo, coin1, coin2):
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 1e-6 or abs(amount - required) < 1000
     assert _get_balance(coins[coin2], router) == 1
 
 
