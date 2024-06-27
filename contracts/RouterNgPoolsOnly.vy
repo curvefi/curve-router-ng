@@ -289,7 +289,8 @@ def get_dx(
     _out_amount: uint256,
 ) -> uint256:
     """
-    @notice Calculate the input amount required to receive the desired output amount
+    @notice Calculate the input amount required to receive the desired output amount.
+            This method is NOT PRECISE for swap_type = 4 and 6.
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
     @param _route Array of [initial token, pool, token, pool, token, ...]

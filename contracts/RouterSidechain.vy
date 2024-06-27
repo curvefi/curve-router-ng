@@ -451,7 +451,8 @@ def get_dx(
     _base_tokens: address[5]=empty(address[5]),
 ) -> uint256:
     """
-    @notice Calculate the input amount required to receive the desired `_out_amount`
+    @notice Calculate the input amount required to receive the desired `_out_amount`.
+            This method is NOT PRECISE for swap_type = 4, 5, 6, 7.
     @dev Routing and swap params must be determined off-chain. This
          functionality is designed for gas efficiency over ease-of-use.
     @param _route Array of [initial token, pool or zap, token, pool or zap, token, ...]
