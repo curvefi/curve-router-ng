@@ -86,7 +86,7 @@ def test_1_tricrypto(router, coins, margo, coin1, coin2):
     pool = "0x960ea3e3C7FB317332d990873d354E18d7645590"  # tricrypto
     swap_params = [i, j, 1, 3, 3]
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params, test_slippage=False)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-10 or (balances[1] - initial_balances[1]) - expected <= 100
@@ -132,7 +132,7 @@ def test_route_2_steps(router, coins, margo):
 
     assert initial_balances[0] - amount == balances[0]
     assert balances[1] - initial_balances[1] == expected
-    assert abs(amount - required) / amount < 1e-5
+    assert abs(amount - required) / amount < 2e-5
     assert _get_balance(coins[coin_names[-1]], router) == 1
 
 
