@@ -22,6 +22,7 @@ interface StableNgPool:
     def remove_liquidity_one_coin(token_amount: uint256, i: int128, min_amount: uint256): nonpayable
 
 interface StableNgMetaPool:
+    def BASE_POOL() -> address: view
     def get_dy_underlying(i: int128, j: int128, amount: uint256) -> uint256: view
     def get_dx_underlying(i: int128, j: int128, amount: uint256) -> uint256: view
     def exchange_underlying(i: int128, j: int128, dx: uint256, min_dy: uint256): nonpayable
@@ -286,7 +287,6 @@ def get_dx(
     _route: address[11],
     _swap_params: uint256[4][5],
     _out_amount: uint256,
-    _base_pools: address[5]=empty(address[5]),
 ) -> uint256:
     """
     @notice Calculate the input amount required to receive the desired output amount
@@ -312,7 +312,6 @@ def get_dx(
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
     @param _out_amount The desired amount of output coin to receive.
-    @param _base_pools Array of base pools (for meta pools).
     @return Required amount of input token to send.
     """
     amount: uint256 = _out_amount
@@ -323,7 +322,6 @@ def get_dx(
         swap: address = _route[i * 2 + 1]
         if swap == empty(address):
             continue
-        base_pool: address = _base_pools[i]
         params: uint256[4] = _swap_params[i]  # i, j, swap_type, pool_type
 
         # Calc a required input amount according to the swap type
@@ -336,6 +334,7 @@ def get_dx(
             _n: int128 = convert(params[0], int128)
             _k: int128 = convert(params[1], int128)
             if _n > 0 and _k > 0:
+                base_pool: address = StableNgMetaPool(swap).BASE_POOL()
                 amount = StableNgPool(base_pool).get_dx(_n - 1, _k - 1, amount)
             else:
                 amount = StableNgMetaPool(swap).get_dx_underlying(_n, _k, amount)
