@@ -227,6 +227,11 @@ def exchange(
         output_token = _route[(i + 1) * 2]
         params: uint256[5] = _swap_params[i]  # i, j, swap_type, pool_type, n_coins
 
+        # store the initial balance of the output_token
+        output_token_initial_balance: uint256 = self.balance
+        if output_token != ETH_ADDRESS:
+            output_token_initial_balance = ERC20(output_token).balanceOf(self)
+
         if not self.is_approved[input_token][swap]:
             assert ERC20(input_token).approve(swap, max_value(uint256), default_return_value=True, skip_contract_check=True)
             self.is_approved[input_token][swap] = True
@@ -327,8 +332,8 @@ def exchange(
         else:
             amount = ERC20(output_token).balanceOf(self)
 
-        # sanity check, if the routing data is incorrect we will have a 0 balance and that is bad
-        assert amount != 0, "Received nothing"
+        # sanity check, if the routing data is incorrect we will have a 0 balance change and that is bad
+        assert amount - output_token_initial_balance != 0, "Received nothing"
 
         # check if this was the last swap
         if i == 4 or _route[i * 2 + 3] == empty(address):
