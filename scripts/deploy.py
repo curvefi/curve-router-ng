@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
-from brownie import network, ZERO_ADDRESS
-from brownie import Router, RouterOptimism, RouterSidechain, RouterSidechainTricryptoMeta, accounts
+from brownie import network, ZERO_ADDRESS, accounts, Router, RouterOptimism, RouterSidechain, RouterSidechainTricryptoMeta, RouterNgPoolsOnly
 
 
 # Skip Celo and Aurora
@@ -34,10 +33,6 @@ INIT_DATA = {
         "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
         "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
     },
-    # "zksync": {  TODO
-    #     "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",  TODO deploy stable_calc
-    #     "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",  TODO deploy crypto_calc
-    # },
     # "moonbeam": {  TODO
     #     "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
     #     "crypto_calc": "0xA72C85C258A81761433B4e8da60505Fe3Dd551CC",
@@ -63,19 +58,9 @@ INIT_DATA = {
         "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
         "crypto_calc": "0xd6681e74eea20d196c15038c580f721ef2ab6320",
     },
-    "fraxtal": {
-        "stable_calc": "0xCA8d0747B5573D69653C3aC22242e6341C36e4b4",
-        "crypto_calc": "0x69522fb5337663d3B4dFB0030b881c1A750Adb4f",
-    },
-    "xlayer": {
-        "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
-        "crypto_calc": "0x69522fb5337663d3B4dFB0030b881c1A750Adb4f",
-    },
-    "mantle": {
-        "stable_calc": "0x0fE38dCC905eC14F6099a83Ac5C93BF2601300CF",
-        "crypto_calc": "0xd6681e74eEA20d196c15038C580f721EF2aB6320",
-    },
 }
+
+NG_POOLS_ONLY_NETWORKS = ["fraxtal", "xlayer", "mantle"]
 
 WETH = {
     "ethereum": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
@@ -107,6 +92,9 @@ def main():
     elif not network_name.endswith("-fork"):
         accounts.load('curve-deployer')
     txparams.update({'from': accounts[0]})
+
+    if network_name in NG_POOLS_ONLY_NETWORKS:
+        return RouterNgPoolsOnly.deploy(WETH[network_name], txparams)
 
     stable_calc = INIT_DATA[network_name]["stable_calc"]
     crypto_calc = INIT_DATA[network_name]["crypto_calc"]
