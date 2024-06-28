@@ -3,7 +3,7 @@
 """
 @title CurveRouterSidechainTricryptoMeta v1.1
 @author Curve.Fi
-@license Copyright (c) Curve.Fi, 2020-2023 - all rights reserved
+@license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
 """
 
