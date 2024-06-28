@@ -13,3 +13,4 @@
 - Fraxtal: [0x9f2Fa7709B30c75047980a0d70A106728f0Ef2db](https://fraxscan.com/address/0x9f2Fa7709B30c75047980a0d70A106728f0Ef2db#code)
 - X Layer: [0xBFab8ebc836E1c4D81837798FC076D219C9a1855](https://www.oklink.com/xlayer/address/0xBFab8ebc836E1c4D81837798FC076D219C9a1855/contract)
 - Mantle: [0x4f37A9d177470499A2dD084621020b023fcffc1F](https://mantlescan.xyz/address/0x4f37A9d177470499A2dD084621020b023fcffc1F#code)
+- ZkSync: [0x7C915390e109CA66934f1eB285854375D1B127FA](https://explorer.zksync.io/address/0x7C915390e109CA66934f1eB285854375D1B127FA#contract)
