@@ -584,22 +584,6 @@ def test_8_wsteth(router, coins, margo, coin1, coin2):
     assert 1 <= _get_balance(coins[coin2], router) <= 2
 
 
-@pytest.mark.parametrize("coin1", ["frxeth", "sfrxeth"])
-@pytest.mark.parametrize("coin2", ["frxeth", "sfrxeth"])
-def test_8_sfrxeth(router, coins, margo, coin1, coin2):
-    if coin1 == coin2:
-        return
-    pool = coins["sfrxeth"].address
-    swap_params = [0, 0, 8, 0, 0]
-    amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
-
-    assert initial_balances[0] - amount == balances[0]
-    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6
-    assert abs(amount - required) / amount < 1e-15
-    assert _get_balance(coins[coin2], router) == 1
-
-
 def test_8_wbeth(router, coins, margo):
     coin1 = "eth"
     coin2 = "wbeth"
@@ -614,11 +598,49 @@ def test_8_wbeth(router, coins, margo):
     assert _get_balance(coins[coin2], router) == 1
 
 
-def test_8_susde(router, coins, margo):
+@pytest.mark.parametrize("coin1", ["frxeth", "sfrxeth"])
+@pytest.mark.parametrize("coin2", ["frxeth", "sfrxeth"])
+def test_9_sfrxeth(router, coins, margo, coin1, coin2):
+    if coin1 == coin2:
+        return
+    i, j = 0, 1
+    if coin2 == "frxeth":
+        i, j = 1, 0
+    pool = coins["sfrxeth"].address
+    swap_params = [i, j, 9, 0, 0]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6
+    assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
+
+
+@pytest.mark.parametrize("coin1", ["crvusd", "scrvusd"])
+@pytest.mark.parametrize("coin2", ["crvusd", "scrvusd"])
+def test_9_scrvusd(router, coins, margo, coin1, coin2):
+    if coin1 == coin2:
+        return
+    i, j = 0, 1
+    if coin2 == "crvusd":
+        i, j = 1, 0
+    pool = coins["scrvusd"].address
+    swap_params = [i, j, 9, 0, 0]
+    amount, expected, required, initial_balances, balances = \
+        _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
+
+    assert initial_balances[0] - amount == balances[0]
+    assert abs((balances[1] - initial_balances[1]) - expected) / expected < 1e-6
+    assert abs(amount - required) / amount < 1e-15
+    assert _get_balance(coins[coin2], router) == 1
+
+
+def test_9_susde(router, coins, margo):
     coin1 = "usde"
     coin2 = "susde"
     pool = coins[coin2].address
-    swap_params = [0, 0, 8, 0, 0]
+    swap_params = [0, 1, 9, 0, 0]
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin1, coin2], pool, swap_params)
 
