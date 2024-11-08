@@ -99,7 +99,7 @@ interface wstETH:
     def wrap(_stETHAmount: uint256) -> uint256: nonpayable
     def unwrap(_wstETHAmount: uint256) -> uint256: nonpayable
 
-interface sfrxETH:
+interface ERC4626:
     def convertToShares(assets: uint256) -> uint256: view
     def convertToAssets(shares: uint256) -> uint256: view
     def deposit(assets: uint256, receiver: address) -> uint256: nonpayable
@@ -136,10 +136,7 @@ ETH_ADDRESS: constant(address) = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE
 STETH_ADDRESS: constant(address) = 0xae7ab96520DE3A18E5e111B5EaAb095312D7fE84
 WSTETH_ADDRESS: constant(address) = 0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0
 FRXETH_ADDRESS: constant(address) = 0x5E8422345238F34275888049021821E8E08CAa1f
-SFRXETH_ADDRESS: constant(address) = 0xac3E018457B222d93114458476f3E3416Abbe38F
 WBETH_ADDRESS: constant(address) = 0xa2E3356610840701BDf5611a53974510Ae27E2e1
-USDE_ADDRESS: constant(address) = 0x4c9EDD5852cd905f086C759E8383e09bff1E68B3
-SUSDE_ADDRESS: constant(address) = 0x9D39A5DE30e57443BfF2A8307A4256c8797A3497
 WETH_ADDRESS: immutable(address)
 
 # Calc zaps
@@ -158,7 +155,6 @@ def __default__():
 @external
 def __init__( _weth: address, _stable_calc: address, _crypto_calc: address):
     self.is_approved[WSTETH_ADDRESS][WSTETH_ADDRESS] = True
-    self.is_approved[SFRXETH_ADDRESS][SFRXETH_ADDRESS] = True
 
     WETH_ADDRESS = _weth
     STABLE_CALC = StableCalc(_stable_calc)
@@ -186,6 +182,9 @@ def exchange(
     @param _swap_params Multidimensional array of [i, j, swap_type, pool_type, n_coins] where
                         i is the index of input token
                         j is the index of output token
+                        For ERC4626:
+                            i == 0 - asset -> share
+                            i == 1 - share -> asset
 
                         The swap_type should be:
                         1. for `exchange`,
@@ -196,7 +195,8 @@ def exchange(
                         5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
-                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe
+                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, ETH -> wBETH
+                        9. for ERC4626 asset <-> share
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -313,16 +313,17 @@ def exchange(
                 wstETH(swap).wrap(amount)
             elif input_token == WSTETH_ADDRESS and output_token == STETH_ADDRESS:
                 wstETH(swap).unwrap(amount)
-            elif input_token == FRXETH_ADDRESS and output_token == SFRXETH_ADDRESS:
-                sfrxETH(swap).deposit(amount, self)
-            elif input_token == SFRXETH_ADDRESS and output_token == FRXETH_ADDRESS:
-                sfrxETH(swap).redeem(amount, self, self)
             elif input_token == ETH_ADDRESS and output_token == WBETH_ADDRESS:
                 wBETH(swap).deposit(0xeCb456EA5365865EbAb8a2661B0c503410e9B347, value=amount)
-            elif input_token == USDE_ADDRESS and output_token == SUSDE_ADDRESS:
-                sfrxETH(swap).deposit(amount, self)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe"
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, ETH -> wBETH"
+        elif params[2] == 9:
+            if params[0] == 0:
+                ERC4626(swap).deposit(amount, self)
+            elif params[0] == 1:
+                ERC4626(swap).redeem(amount, self, self)
+            else:
+                raise "Wrong index"
         else:
             raise "Bad swap type"
 
@@ -373,6 +374,9 @@ def get_dy(
     @param _swap_params Multidimensional array of [i, j, swap_type, pool_type, n_coins] where
                         i is the index of input token
                         j is the index of output token
+                        For ERC4626:
+                            i == 0 - asset -> share
+                            i == 1 - share -> asset
 
                         The swap_type should be:
                         1. for `exchange`,
@@ -383,7 +387,8 @@ def get_dy(
                         5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
-                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe
+                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, ETH -> wBETH
+                        9. for ERC4626 asset <-> share
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -477,16 +482,17 @@ def get_dy(
                 amount = wstETH(swap).getStETHByWstETH(amount)
             elif output_token == WSTETH_ADDRESS:
                 amount = wstETH(swap).getWstETHByStETH(amount)
-            elif input_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
-            elif output_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToShares(amount)
             elif output_token == WBETH_ADDRESS:
                 amount = amount * 10**18 / wBETH(swap).exchangeRate()
-            elif output_token == SUSDE_ADDRESS:
-                amount = sfrxETH(swap).convertToShares(amount)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe"
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, ETH -> wBETH"
+        elif params[2] == 9:
+            if params[0] == 0:
+                amount = ERC4626(swap).convertToShares(amount)
+            elif params[0] == 1:
+                amount = ERC4626(swap).convertToAssets(amount)
+            else:
+                raise "Wrong index"
         else:
             raise "Bad swap type"
 
@@ -520,6 +526,9 @@ def get_dx(
     @param _swap_params Multidimensional array of [i, j, swap_type, pool_type, n_coins] where
                         i is the index of input token
                         j is the index of output token
+                        For ERC4626:
+                            i == 0 - asset -> share
+                            i == 1 - share -> asset
 
                         The swap_type should be:
                         1. for `exchange`,
@@ -530,7 +539,8 @@ def get_dx(
                         5. for lending pool underlying coin -> LP token "exchange" (actually `add_liquidity`),
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. for LP token -> lending or fake pool underlying coin "exchange" (actually `remove_liquidity_one_coin`)
-                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe
+                        8. for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, ETH -> wBETH
+                        9. for ERC4626 asset <-> share
 
                         pool_type: 1 - stable, 2 - twocrypto, 3 - tricrypto, 4 - llamma
                                    10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng
@@ -643,16 +653,17 @@ def get_dx(
                 amount = wstETH(swap).getWstETHByStETH(amount)
             elif output_token == WSTETH_ADDRESS:
                 amount = wstETH(swap).getStETHByWstETH(amount)
-            elif input_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToShares(amount)
-            elif output_token == SFRXETH_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
             elif output_token == WBETH_ADDRESS:
                 amount = amount * wBETH(swap).exchangeRate() / 10**18
-            elif output_token == SUSDE_ADDRESS:
-                amount = sfrxETH(swap).convertToAssets(amount)
             else:
-                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, frxETH <-> sfrxETH, ETH -> wBETH, USDe -> sUSDe"
+                raise "Swap type 8 is only for ETH <-> WETH, ETH -> stETH or ETH -> frxETH, stETH <-> wstETH, ETH -> wBETH"
+        elif params[2] == 9:
+            if params[0] == 0:
+                amount = ERC4626(swap).convertToAssets(amount)
+            elif params[0] == 1:
+                amount = ERC4626(swap).convertToShares(amount)
+            else:
+                raise "Wrong index"
         else:
             raise "Bad swap type"
 
