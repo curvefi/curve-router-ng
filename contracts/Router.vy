@@ -7,7 +7,7 @@
 @notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
 """
 
-version: public(constant(String[8])) = "1.1.0"  # ng pools
+version: public(constant(String[8])) = "1.2.0"
 
 
 from vyper.interfaces import ERC20
