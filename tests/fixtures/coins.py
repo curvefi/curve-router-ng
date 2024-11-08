@@ -36,6 +36,8 @@ def amounts(coin_dict, network):
     _amounts = {}
     for coin_name in coin_dict.keys():
         _amounts[coin_name] = 1000 * 10**coin_dict[coin_name].get("decimals")
+        if coin_name == "weth":
+            _amounts[coin_name] = 100 * 10 ** coin_dict[coin_name].get("decimals")
         if coin_name in ["sbtc", "sbtc2_lp", "btc.b"]:
             _amounts[coin_name] = 200 * 10 ** coin_dict[coin_name].get("decimals")
         if network == "optimism" and coin_name in ["seth", "sbtc"]:

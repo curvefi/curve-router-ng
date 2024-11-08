@@ -164,18 +164,18 @@ def test_1_twocrypto_ng(router, coins, margo, coin1, coin2):
     assert _get_balance(coins[coin2], router) == 1
 
 
-@pytest.mark.parametrize("coin", ["weth", "cvg"])
+@pytest.mark.parametrize("coin", ["weth", "sdt"])
 def test_4_twocrypto_ng(router, coins, margo, coin):
     indexes = {
         "weth": 0,
-        "cvg": 1
+        "sdt": 1
     }
     i = indexes[coin]
-    lp = "cvgeth_lp"
-    pool = "0x004c167d27ada24305b76d80762997fa6eb8d9b2"  # cvgeth
+    lp = "sdtweth_lp"
+    pool = "0xa19bf6fbf05624282cb6ed498f4761f22e084edd"  # sdt/weth
     swap_params = [i, 0, 4, 20, 2]
     amount = None if coin != "weth" else 0.1
-    _exchange(router, coins, margo, [lp, "weth"], pool, [0, 0, 6, 20, 2], amount=1)  # needed to claim fees and make calculations precise
+    _exchange(router, coins, margo, [lp, "weth"], pool, [0, 0, 6, 20, 2])  # needed to claim fees and make calculations precise
     amount, expected, required, initial_balances, balances = \
         _exchange(router, coins, margo, [coin, lp], pool, swap_params, amount=amount)
 
@@ -185,20 +185,19 @@ def test_4_twocrypto_ng(router, coins, margo, coin):
     assert _get_balance(coins[lp], router) == 1
 
 
-@pytest.mark.parametrize("coin", ["weth", "cvg"])
+@pytest.mark.parametrize("coin", ["weth", "sdt"])
 def test_6_twocrypto_ng(router, coins, margo, coin):
     indexes = {
         "weth": 0,
-        "cvg": 1
+        "sdt": 1
     }
     j = indexes[coin]
-    lp = "cvgeth_lp"
-    pool = "0x004c167d27ada24305b76d80762997fa6eb8d9b2"  # cvgeth
+    lp = "sdtweth_lp"
+    pool = "0xa19bf6fbf05624282cb6ed498f4761f22e084edd"  # sdt/weth
     swap_params = [0, j, 6, 20, 2]
-    amount = None if coin != "weth" else 0.1
-    _exchange(router, coins, margo, [lp, coin], pool, swap_params, amount=1)  # needed to claim fees and make calculations precise
+    _exchange(router, coins, margo, [lp, coin], pool, swap_params)  # needed to claim fees and make calculations precise
     amount, expected, required, initial_balances, balances = \
-        _exchange(router, coins, margo, [lp, coin], pool, swap_params, amount=amount)
+        _exchange(router, coins, margo, [lp, coin], pool, swap_params)
 
     assert initial_balances[0] - amount == balances[0]
     assert abs((balances[1] - initial_balances[1]) - expected) <= 1

@@ -156,5 +156,13 @@
   "susde": {
     "decimals": 18,
     "address": "0x9D39A5DE30e57443BfF2A8307A4256c8797A3497"
+  },
+  "sdt": {
+    "decimals": 18,
+    "address": "0x73968b9a57c6e53d41345fd57a6e6ae27d6cdb2f"
+  },
+  "sdtweth_lp": {
+    "decimals": 18,
+    "address": "0xa19bf6fbf05624282cb6ed498f4761f22e084edd"
   }
 }
