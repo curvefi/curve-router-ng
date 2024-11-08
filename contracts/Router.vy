@@ -1,7 +1,7 @@
 # @version 0.3.10
 
 """
-@title CurveRouter v1.1
+@title CurveRouter v1.2
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
