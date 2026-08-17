@@ -1,13 +1,13 @@
 # @version 0.3.10
 
 """
-@title CurveRouterNgPoolsOnly v1.1
+@title CurveRouterNgPoolsOnly v1.2
 @author Curve.Fi
 @license Copyright (c) Curve.Fi, 2020-2024 - all rights reserved
 @notice Performs up to 5 swaps in a single transaction, can do estimations with get_dy and get_dx
 """
 
-version: public(constant(String[8])) = "1.1.0"  # ng pools
+version: public(constant(String[8])) = "1.2.0"  # ng pools
 
 
 from vyper.interfaces import ERC20
@@ -45,6 +45,12 @@ interface TriCryptoNgPool:
 interface WETH:
     def deposit(): payable
     def withdraw(_amount: uint256): nonpayable
+
+interface ERC4626:
+    def convertToShares(assets: uint256) -> uint256: view
+    def convertToAssets(shares: uint256) -> uint256: view
+    def deposit(assets: uint256, receiver: address) -> uint256: nonpayable
+    def redeem(shares: uint256, receiver: address, owner: address) -> uint256: nonpayable
 
 
 event Exchange:
@@ -93,6 +99,9 @@ def exchange(
     @param _swap_params Multidimensional array of [i, j, swap_type, pool_type] where
                         i is the index of input token
                         j is the index of output token
+                        For ERC4626:
+                            i == 0 - asset -> share
+                            i == 1 - share -> asset
 
                         The swap_type should be:
                         1. for `exchange`,
@@ -103,6 +112,7 @@ def exchange(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. -- legacy --
                         8. for ETH <-> WETH
+                        9. for ERC4626 asset <-> share
 
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
@@ -170,6 +180,13 @@ def exchange(
                 WETH(swap).withdraw(amount)
             else:
                 raise "Swap type 8 is only for ETH <-> WETH"
+        elif params[2] == 9:
+            if params[0] == 0:
+                ERC4626(swap).deposit(amount, self)
+            elif params[0] == 1:
+                ERC4626(swap).redeem(amount, self, self)
+            else:
+                raise "Wrong index"
         else:
             raise "Bad swap type"
 
@@ -219,6 +236,9 @@ def get_dy(
     @param _swap_params Multidimensional array of [i, j, swap_type, pool_type] where
                         i is the index of input token
                         j is the index of output token
+                        For ERC4626:
+                            i == 0 - asset -> share
+                            i == 1 - share -> asset
 
                         The swap_type should be:
                         1. for `exchange`,
@@ -229,6 +249,7 @@ def get_dy(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. -- legacy --
                         8. for ETH <-> WETH
+                        9. for ERC4626 asset <-> share
 
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
@@ -271,6 +292,13 @@ def get_dy(
         elif params[2] == 8:
             # ETH <--> WETH rate is 1:1
             pass
+        elif params[2] == 9:
+            if params[0] == 0:
+                amount = ERC4626(swap).convertToShares(amount)
+            elif params[0] == 1:
+                amount = ERC4626(swap).convertToAssets(amount)
+            else:
+                raise "Wrong index"
         else:
             raise "Bad swap type"
 
@@ -299,6 +327,9 @@ def get_dx(
     @param _swap_params Multidimensional array of [i, j, swap_type, pool_type] where
                         i is the index of input token
                         j is the index of output token
+                        For ERC4626:
+                            i == 0 - asset -> share
+                            i == 1 - share -> asset
 
                         The swap_type should be:
                         1. for `exchange`,
@@ -309,6 +340,7 @@ def get_dx(
                         6. for LP token -> coin "exchange" (actually `remove_liquidity_one_coin`)
                         7. -- legacy --
                         8. for ETH <-> WETH
+                        9. for ERC4626 asset <-> share
 
                         pool_type: 10 - stable-ng, 20 - twocrypto-ng, 30 - tricrypto-ng, 4 - llamma
 
@@ -361,6 +393,13 @@ def get_dx(
         elif params[2] == 8:
             # ETH <--> WETH rate is 1:1
             pass
+        elif params[2] == 9:
+            if params[0] == 0:
+                amount = ERC4626(swap).convertToAssets(amount)
+            elif params[0] == 1:
+                amount = ERC4626(swap).convertToShares(amount)
+            else:
+                raise "Wrong index"
         else:
             raise "Bad swap type"
 
